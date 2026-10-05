@@ -44,7 +44,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'home' => '/home',
+    'home' => '/dashboard',
 
     /*
     |--------------------------------------------------------------------------
@@ -111,36 +111,21 @@ return [
 
     'features' => [
 
-        Features::registration(),
+    Features::registration(),
 
-        Features::resetPasswords(),
+    Features::resetPasswords(),
 
-        // Features::emailVerification(),
+    Features::updateProfileInformation(),
 
-        Features::updateProfileInformation(),
+    Features::updatePasswords(),
 
-        Features::updatePasswords(),
+    Features::twoFactorAuthentication([
+        'confirm' => true,
+        'confirmPassword' => false,
+    ]),
 
-        /*
-        |--------------------------------------------------------------------------
-        | Two-Factor Authentication
-        |--------------------------------------------------------------------------
-        */
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => false,
-        ]),
-
-        /*
-        |--------------------------------------------------------------------------
-        | Passkeys
-        |--------------------------------------------------------------------------
-        */
-
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
-    ],
-
+    Features::passkeys([
+        'confirmPassword' => true,
+    ]),
+],
 ];

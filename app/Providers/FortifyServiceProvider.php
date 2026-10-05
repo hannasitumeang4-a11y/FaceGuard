@@ -6,12 +6,18 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+
+use App\Http\Responses\TwoFactorLoginResponse;
+
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -21,7 +27,92 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN RESPONSE
+        |--------------------------------------------------------------------------
+        |
+        | Digunakan setelah login email + password.
+        |
+        */
+
+        $this->app->singleton(LoginResponse::class, function () {
+
+            return new class implements LoginResponse {
+
+                public function toResponse($request)
+                {
+                    $user = $request->user();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MFA BELUM AKTIF
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $user &&
+                        ! $user->hasEnabledTwoFactorAuthentication()
+                    ) {
+                        return redirect()->route('mfa.setup');
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | WAJIB REGISTRASI WAJAH
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $user &&
+                        ! $user->faceProfile
+                    ) {
+                        return redirect()->route(
+                            'face.registration'
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ADMIN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $user &&
+                        $user->role === 'admin'
+                    ) {
+                        return redirect()->route(
+                            'admin.dashboard'
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | USER BIASA
+                    |--------------------------------------------------------------------------
+                    */
+
+                    return redirect()->route(
+                        'dashboard'
+                    );
+                }
+            };
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | TWO FACTOR LOGIN RESPONSE
+        |--------------------------------------------------------------------------
+        |
+        | Ini khusus untuk redirect setelah OTP berhasil.
+        |
+        */
+
+        $this->app->singleton(
+            TwoFactorLoginResponseContract::class,
+            TwoFactorLoginResponse::class
+        );
     }
 
     /**
@@ -31,7 +122,7 @@ class FortifyServiceProvider extends ServiceProvider
     {
         /*
         |--------------------------------------------------------------------------
-        | User Actions
+        | CREATE USER
         |--------------------------------------------------------------------------
         */
 
@@ -39,13 +130,31 @@ class FortifyServiceProvider extends ServiceProvider
             CreateNewUser::class
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE PROFILE
+        |--------------------------------------------------------------------------
+        */
+
         Fortify::updateUserProfileInformationUsing(
             UpdateUserProfileInformation::class
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE PASSWORD
+        |--------------------------------------------------------------------------
+        */
+
         Fortify::updateUserPasswordsUsing(
             UpdateUserPassword::class
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET PASSWORD
+        |--------------------------------------------------------------------------
+        */
 
         Fortify::resetUserPasswordsUsing(
             ResetUserPassword::class
@@ -53,7 +162,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | Two-Factor Authentication
+        | TWO FACTOR AUTHENTICATION
         |--------------------------------------------------------------------------
         */
 
@@ -61,13 +170,23 @@ class FortifyServiceProvider extends ServiceProvider
             RedirectIfTwoFactorAuthenticatable::class
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | TWO FACTOR CHALLENGE VIEW
+        |--------------------------------------------------------------------------
+        */
+
         Fortify::twoFactorChallengeView(function () {
-            return view('auth.two-factor-challenge');
+
+            return view(
+                'auth.two-factor-challenge'
+            );
+
         });
 
         /*
         |--------------------------------------------------------------------------
-        | Login Rate Limiter
+        | LOGIN RATE LIMITER
         |--------------------------------------------------------------------------
         */
 
@@ -78,30 +197,32 @@ class FortifyServiceProvider extends ServiceProvider
                     $request->input(
                         Fortify::username()
                     )
-                ) . '|' . $request->ip()
+                )
+                . '|'
+                . $request->ip()
             );
 
-            return Limit::perMinute(5)->by(
-                $throttleKey
-            );
+            return Limit::perMinute(5)
+                ->by($throttleKey);
         });
 
         /*
         |--------------------------------------------------------------------------
-        | Two-Factor Rate Limiter
+        | TWO FACTOR RATE LIMITER
         |--------------------------------------------------------------------------
         */
 
         RateLimiter::for('two-factor', function (Request $request) {
 
-            return Limit::perMinute(5)->by(
-                $request->session()->get('login.id')
-            );
+            return Limit::perMinute(5)
+                ->by(
+                    $request->session()->get('login.id')
+                );
         });
 
         /*
         |--------------------------------------------------------------------------
-        | Passkeys Rate Limiter
+        | PASSKEY RATE LIMITER
         |--------------------------------------------------------------------------
         */
 
@@ -109,11 +230,12 @@ class FortifyServiceProvider extends ServiceProvider
 
             $credentialId = $request->input('credential.id');
 
-            return Limit::perMinute(10)->by(
-                ($credentialId ?: $request->session()->getId())
-                . '|' .
-                $request->ip()
-            );
+            return Limit::perMinute(10)
+                ->by(
+                    ($credentialId ?: $request->session()->getId())
+                    . '|'
+                    . $request->ip()
+                );
         });
     }
 }
