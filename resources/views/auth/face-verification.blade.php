@@ -471,6 +471,10 @@ function startLivenessDetection()
                         rightEAR
                     ) / 2;
 
+                console.log('LEFT EAR:', leftEAR);
+                console.log('RIGHT EAR:', rightEAR);
+                console.log('AVERAGE EAR:', averageEAR);
+
 
                 /*
                 |--------------------------------------------------------------------------
@@ -479,7 +483,7 @@ function startLivenessDetection()
                 */
 
                 if (
-                    averageEAR < 0.22
+                    averageEAR < 0.30
                 ) {
 
                     blinkDetected =
@@ -500,7 +504,7 @@ function startLivenessDetection()
                 }
 
             },
-            300
+            100
         );
 }
 
