@@ -32,80 +32,80 @@ class FortifyServiceProvider extends ServiceProvider
         | LOGIN RESPONSE
         |--------------------------------------------------------------------------
         |
-        | Digunakan setelah login email + password.
+        | Digunakan setelah email + password berhasil.
         |
         */
 
-        $this->app->singleton(LoginResponse::class, function () {
+        $this->app->singleton(
+            LoginResponse::class,
+            function () {
 
-            return new class implements LoginResponse {
+                return new class implements LoginResponse {
 
-                public function toResponse($request)
-                {
-                    $user = $request->user();
+                    public function toResponse($request)
+                    {
+                        $user = $request->user();
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MFA BELUM AKTIF
-                    |--------------------------------------------------------------------------
-                    */
 
-                    if (
-                        $user &&
-                        ! $user->hasEnabledTwoFactorAuthentication()
-                    ) {
-                        return redirect()->route('mfa.setup');
-                    }
+                        /*
+                        |--------------------------------------------------------------------------
+                        | MFA BELUM AKTIF
+                        |--------------------------------------------------------------------------
+                        */
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | WAJIB REGISTRASI WAJAH
-                    |--------------------------------------------------------------------------
-                    */
+                        if (
+                            $user &&
+                            ! $user->hasEnabledTwoFactorAuthentication()
+                        ) {
 
-                    if (
-                        $user &&
-                        ! $user->faceProfile
-                    ) {
+                            return redirect()->route(
+                                'mfa.setup'
+                            );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | FACE BELUM TERDAFTAR
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            $user &&
+                            ! $user->faceProfile
+                        ) {
+
+                            return redirect()->route(
+                                'face.registration'
+                            );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | FACE SUDAH TERDAFTAR
+                        |--------------------------------------------------------------------------
+                        |
+                        | Jangan langsung ke dashboard.
+                        | User harus melewati face verification.
+                        |
+                        */
+
                         return redirect()->route(
-                            'face.registration'
+                            'face.verification'
                         );
                     }
+                };
+            }
+        );
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ADMIN
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $user &&
-                        $user->role === 'admin'
-                    ) {
-                        return redirect()->route(
-                            'admin.dashboard'
-                        );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | USER BIASA
-                    |--------------------------------------------------------------------------
-                    */
-
-                    return redirect()->route(
-                        'dashboard'
-                    );
-                }
-            };
-        });
 
         /*
         |--------------------------------------------------------------------------
         | TWO FACTOR LOGIN RESPONSE
         |--------------------------------------------------------------------------
         |
-        | Ini khusus untuk redirect setelah OTP berhasil.
+        | Digunakan setelah OTP berhasil.
         |
         */
 
@@ -114,6 +114,7 @@ class FortifyServiceProvider extends ServiceProvider
             TwoFactorLoginResponse::class
         );
     }
+
 
     /**
      * Bootstrap any application services.
@@ -130,6 +131,7 @@ class FortifyServiceProvider extends ServiceProvider
             CreateNewUser::class
         );
 
+
         /*
         |--------------------------------------------------------------------------
         | UPDATE PROFILE
@@ -139,6 +141,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(
             UpdateUserProfileInformation::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -150,6 +153,7 @@ class FortifyServiceProvider extends ServiceProvider
             UpdateUserPassword::class
         );
 
+
         /*
         |--------------------------------------------------------------------------
         | RESET PASSWORD
@@ -160,6 +164,7 @@ class FortifyServiceProvider extends ServiceProvider
             ResetUserPassword::class
         );
 
+
         /*
         |--------------------------------------------------------------------------
         | TWO FACTOR AUTHENTICATION
@@ -169,6 +174,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::redirectUserForTwoFactorAuthenticationUsing(
             RedirectIfTwoFactorAuthenticatable::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -184,27 +190,33 @@ class FortifyServiceProvider extends ServiceProvider
 
         });
 
+
         /*
         |--------------------------------------------------------------------------
         | LOGIN RATE LIMITER
         |--------------------------------------------------------------------------
         */
 
-        RateLimiter::for('login', function (Request $request) {
+        RateLimiter::for(
+            'login',
+            function (Request $request) {
 
-            $throttleKey = Str::transliterate(
-                Str::lower(
-                    $request->input(
-                        Fortify::username()
-                    )
-                )
-                . '|'
-                . $request->ip()
-            );
+                $throttleKey =
+                    Str::transliterate(
+                        Str::lower(
+                            $request->input(
+                                Fortify::username()
+                            )
+                        )
+                        . '|'
+                        . $request->ip()
+                    );
 
-            return Limit::perMinute(5)
-                ->by($throttleKey);
-        });
+                return Limit::perMinute(5)
+                    ->by($throttleKey);
+            }
+        );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -212,13 +224,19 @@ class FortifyServiceProvider extends ServiceProvider
         |--------------------------------------------------------------------------
         */
 
-        RateLimiter::for('two-factor', function (Request $request) {
+        RateLimiter::for(
+            'two-factor',
+            function (Request $request) {
 
-            return Limit::perMinute(5)
-                ->by(
-                    $request->session()->get('login.id')
-                );
-        });
+                return Limit::perMinute(5)
+                    ->by(
+                        $request
+                            ->session()
+                            ->get('login.id')
+                    );
+            }
+        );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -226,16 +244,28 @@ class FortifyServiceProvider extends ServiceProvider
         |--------------------------------------------------------------------------
         */
 
-        RateLimiter::for('passkeys', function (Request $request) {
+        RateLimiter::for(
+            'passkeys',
+            function (Request $request) {
 
-            $credentialId = $request->input('credential.id');
+                $credentialId =
+                    $request->input(
+                        'credential.id'
+                    );
 
-            return Limit::perMinute(10)
-                ->by(
-                    ($credentialId ?: $request->session()->getId())
-                    . '|'
-                    . $request->ip()
-                );
-        });
+                return Limit::perMinute(10)
+                    ->by(
+                        (
+                            $credentialId
+                            ?:
+                            $request
+                                ->session()
+                                ->getId()
+                        )
+                        . '|'
+                        . $request->ip()
+                    );
+            }
+        );
     }
 }

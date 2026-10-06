@@ -3,50 +3,67 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
-
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 
 class MfaSetupController extends Controller
 {
+    /**
+     * Display MFA setup page.
+     */
     public function show(Request $request)
     {
         $user = $request->user();
 
+        /*
+        |--------------------------------------------------------------------------
+        | CEK LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | Kalau MFA sudah aktif
+        | MFA SUDAH AKTIF
         |--------------------------------------------------------------------------
         |
-        | Jangan tampilkan QR lagi.
-        | Langsung ke dashboard.
+        | Kalau MFA sudah aktif, jangan membuat QR baru.
+        |
+        | Selanjutnya:
+        |
+        | Belum punya wajah
+        |       ↓
+        | Face Registration
+        |
+        | Sudah punya wajah
+        |       ↓
+        | Face Verification
         |
         */
 
-        if (
-            $user->hasEnabledTwoFactorAuthentication()
-        ) {
+        if ($user->hasEnabledTwoFactorAuthentication()) {
 
-            if ($user->role === 'admin') {
+            if (!$user->faceProfile) {
+
                 return redirect()->route(
-                    'admin.dashboard'
+                    'face.registration'
                 );
             }
 
             return redirect()->route(
-                'dashboard'
+                'face.verification'
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Kalau belum punya secret
+        | GENERATE MFA SECRET
         |--------------------------------------------------------------------------
         |
-        | Buat QR Code MFA.
+        | Kalau belum mempunyai secret, generate MFA.
         |
         */
 
@@ -59,6 +76,11 @@ class MfaSetupController extends Controller
             $user->refresh();
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | TAMPILKAN QR CODE
+        |--------------------------------------------------------------------------
+        */
 
         return view(
             'auth.mfa-setup',

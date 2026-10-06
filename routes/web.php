@@ -3,9 +3,11 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\MfaSetupController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaceRegistrationController;
 use App\Http\Controllers\FaceVerificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Middleware\FaceVerifiedMiddleware;
 
 use Illuminate\Support\Facades\Route;
@@ -18,32 +20,34 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-
     return view('welcome');
-
 })->name('home');
-
 
 
 /*
 |--------------------------------------------------------------------------
-| DASHBOARD USER
+| DASHBOARD
 |--------------------------------------------------------------------------
 |
-| Dashboard hanya bisa dibuka setelah:
-| Login + OTP + Face Verification
+| Untuk masuk dashboard:
+|
+| Login
+|   ↓
+| OTP
+|   ↓
+| Face Verification
+|   ↓
+| Dashboard
 |
 */
 
-Route::get('/dashboard', function () {
-
-    return view('dashboard');
-
-})->middleware([
+Route::get(
+    '/dashboard',
+    [DashboardController::class, 'index']
+)->middleware([
     'auth',
     FaceVerifiedMiddleware::class,
 ])->name('dashboard');
-
 
 
 /*
@@ -53,7 +57,6 @@ Route::get('/dashboard', function () {
 */
 
 Route::middleware('auth')->group(function () {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -99,6 +102,38 @@ Route::middleware('auth')->group(function () {
         '/face-verification',
         [FaceVerificationController::class, 'verify']
     )->name('face.verification.verify');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/transactions',
+        [TransactionController::class, 'index']
+    )->name('transactions.index');
+
+    Route::get(
+        '/transactions/create',
+        [TransactionController::class, 'create']
+    )->name('transactions.create');
+
+    Route::post(
+        '/transactions',
+        [TransactionController::class, 'store']
+    )->name('transactions.store');
+
+    Route::get(
+        '/transactions/{transaction}',
+        [TransactionController::class, 'show']
+    )->name('transactions.show');
+
+    Route::delete(
+        '/transactions/{transaction}',
+        [TransactionController::class, 'destroy']
+    )->name('transactions.destroy');
 
 
     /*
@@ -159,16 +194,15 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | ADMIN
     |--------------------------------------------------------------------------
-    |
-    | Admin juga wajib melewati face verification.
-    |
     */
 
-    Route::middleware([
-        'admin',
-        FaceVerifiedMiddleware::class,
-    ])->group(function () {
+    Route::middleware('admin')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN DASHBOARD
+        |--------------------------------------------------------------------------
+        */
 
         Route::get('/admin', function () {
 
@@ -179,11 +213,23 @@ Route::middleware('auth')->group(function () {
         })->name('admin.dashboard');
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN USERS
+        |--------------------------------------------------------------------------
+        */
+
         Route::get(
             '/admin/users',
             [UserController::class, 'index']
         )->name('admin.users');
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN ACTIVITY LOGS
+        |--------------------------------------------------------------------------
+        */
 
         Route::get(
             '/admin/activity-logs',
@@ -194,5 +240,11 @@ Route::middleware('auth')->group(function () {
 
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| AUTH ROUTES
+|--------------------------------------------------------------------------
+*/
 
 require __DIR__.'/auth.php';

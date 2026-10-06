@@ -1,9 +1,15 @@
+```php
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
 
     <meta charset="UTF-8">
+
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
 
     <meta
         name="viewport"
@@ -14,336 +20,396 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- FACE API -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 </head>
 
+<body class="min-h-screen bg-slate-950 text-white">
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-2xl">
+
+        <div class="bg-slate-900 rounded-3xl shadow-2xl border border-slate-800 p-6 md:p-8">
+
+            <!-- HEADER -->
+
+            <div class="text-center mb-6">
+
+                <h1 class="text-2xl md:text-3xl font-bold">
+                    Verifikasi Wajah
+                </h1>
+
+                <p class="text-slate-400 mt-2">
+                    Selesaikan liveness sebelum verifikasi wajah.
+                </p>
+
+            </div>
 
 
-<div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-xl">
+            <!-- CAMERA -->
+
+            <div class="relative bg-black rounded-2xl overflow-hidden">
+
+                <video
+                    id="video"
+                    autoplay
+                    muted
+                    playsinline
+                    class="w-full aspect-video object-cover"
+                ></video>
+
+                <div
+                    id="cameraStatus"
+                    class="absolute top-4 left-4 bg-black/70 px-4 py-2 rounded-full text-sm"
+                >
+                    Menyiapkan kamera...
+                </div>
+
+            </div>
 
 
-    <!-- HEADER -->
+            <!-- LIVENESS PANEL -->
 
-    <div class="text-center">
+            <div class="mt-6 bg-slate-800 rounded-2xl p-5">
 
-        <h1 class="text-3xl font-bold text-gray-800">
-            FaceGuard
-        </h1>
+                <div class="flex justify-between items-center mb-4">
 
-        <p class="mt-2 text-gray-500">
-            Verifikasi Wajah
-        </p>
+                    <div>
+
+                        <p class="text-sm text-slate-400">
+                            Liveness Challenge
+                        </p>
+
+                        <h2
+                            id="challengeTitle"
+                            class="text-xl font-bold mt-1"
+                        >
+                            Menyiapkan...
+                        </h2>
+
+                    </div>
+
+                    <div
+                        id="challengeCounter"
+                        class="bg-slate-700 px-4 py-2 rounded-full text-sm"
+                    >
+                        0 / 3
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="instruction"
+                    class="bg-slate-950 rounded-xl p-4 text-center"
+                >
+                    Menyiapkan deteksi...
+                </div>
+
+
+                <div
+                    id="livenessStatus"
+                    class="mt-4 text-center text-sm text-slate-300"
+                >
+                    Tunggu sebentar...
+                </div>
+
+
+                <div class="mt-4">
+
+                    <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+
+                        <div
+                            id="progressBar"
+                            class="h-full bg-emerald-500 transition-all duration-300"
+                            style="width: 0%"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RETRY -->
+
+                <button
+                    id="retryButton"
+                    type="button"
+                    class="hidden w-full mt-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 font-semibold transition"
+                >
+                    Ulangi Liveness
+                </button>
+
+            </div>
+
+
+            <!-- VERIFY BUTTON -->
+
+            <button
+                id="verifyButton"
+                type="button"
+                disabled
+                class="w-full mt-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed font-semibold transition"
+            >
+                Verifikasi Wajah
+            </button>
+
+
+            <div
+                id="message"
+                class="mt-4 text-center text-sm"
+            ></div>
+
+        </div>
 
     </div>
-
-
-    <!-- INFO -->
-
-    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-
-        <p class="text-sm text-blue-700">
-
-            Posisikan wajah Anda di tengah kamera.
-            Setelah wajah terdeteksi, silakan berkedip
-            untuk melakukan liveness detection.
-
-        </p>
-
-    </div>
-
-
-    <!-- CAMERA -->
-
-    <div class="mt-6 flex justify-center">
-
-        <video
-            id="video"
-            width="400"
-            height="300"
-            autoplay
-            muted
-            playsinline
-            class="rounded-xl border border-gray-300 bg-black"
-        ></video>
-
-    </div>
-
-
-    <!-- STATUS -->
-
-    <div
-        id="status"
-        class="mt-4 text-center text-sm text-gray-600"
-    >
-
-        Memuat sistem verifikasi...
-
-    </div>
-
-
-    <!-- CAMERA BUTTON -->
-
-    <div class="mt-6">
-
-        <button
-            type="button"
-            id="startCamera"
-            disabled
-            class="w-full bg-indigo-600 hover:bg-indigo-700
-                   disabled:bg-gray-400
-                   text-white font-semibold
-                   py-3 rounded-lg"
-        >
-
-            Memuat Sistem...
-
-        </button>
-
-    </div>
-
-
-    <!-- VERIFY BUTTON -->
-
-    <div class="mt-3">
-
-        <button
-            type="button"
-            id="verifyFace"
-            disabled
-            class="w-full bg-green-600 hover:bg-green-700
-                   disabled:bg-gray-400
-                   text-white font-semibold
-                   py-3 rounded-lg"
-        >
-
-            Verifikasi Wajah
-
-        </button>
-
-    </div>
-
 
 </div>
 
 
-
 <script>
 
-
-// ======================================================
-// ELEMENT
-// ======================================================
+/*
+|--------------------------------------------------------------------------
+| ELEMENTS
+|--------------------------------------------------------------------------
+*/
 
 const video =
-    document.getElementById('video');
+    document.getElementById("video");
 
-const statusText =
-    document.getElementById('status');
+const cameraStatus =
+    document.getElementById("cameraStatus");
 
-const startCameraButton =
-    document.getElementById('startCamera');
+const challengeTitle =
+    document.getElementById("challengeTitle");
 
-const verifyFaceButton =
-    document.getElementById('verifyFace');
+const challengeCounter =
+    document.getElementById("challengeCounter");
+
+const instruction =
+    document.getElementById("instruction");
+
+const livenessStatus =
+    document.getElementById("livenessStatus");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const verifyButton =
+    document.getElementById("verifyButton");
+
+const retryButton =
+    document.getElementById("retryButton");
+
+const message =
+    document.getElementById("message");
 
 
-// ======================================================
-// VARIABLE
-// ======================================================
+/*
+|--------------------------------------------------------------------------
+| SERVER CHALLENGE
+|--------------------------------------------------------------------------
+*/
 
-let cameraStream = null;
+const livenessChallenge =
+    @json(session('face_liveness_challenge', []));
 
-let modelsLoaded = false;
+
+/*
+|--------------------------------------------------------------------------
+| STATE
+|--------------------------------------------------------------------------
+*/
+
+let currentStep = 0;
 
 let livenessPassed = false;
 
-let blinkDetected = false;
+let isDetecting = false;
+
+let detectionInterval = null;
+
+let challengeTimer = null;
+
+let savedDescriptor = null;
 
 
-// ======================================================
-// LOAD MODEL
-// ======================================================
+/*
+|--------------------------------------------------------------------------
+| BLINK STATE
+|--------------------------------------------------------------------------
+*/
+
+let earSamples = [];
+
+let baselineEAR = null;
+
+let eyeWasClosed = false;
+
+let blinkCooldown = false;
+
+
+/*
+|--------------------------------------------------------------------------
+| CONFIGURATION
+|--------------------------------------------------------------------------
+*/
+
+const MAX_CHALLENGE_TIME = 15000;
+
+const CALIBRATION_SAMPLES = 12;
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD MODELS
+|--------------------------------------------------------------------------
+*/
 
 async function loadModels()
 {
+    cameraStatus.innerText =
+        "Memuat model face detection...";
+
+
+    await faceapi.nets.tinyFaceDetector.loadFromUri(
+        "/models"
+    );
+
+
+    cameraStatus.innerText =
+        "Memuat face landmark...";
+
+
+    await faceapi.nets.faceLandmark68Net.loadFromUri(
+        "/models"
+    );
+
+
+    cameraStatus.innerText =
+        "Memuat face recognition...";
+
+
+    await faceapi.nets.faceRecognitionNet.loadFromUri(
+        "/models"
+    );
+
+
+    cameraStatus.innerText =
+        "Model berhasil dimuat.";
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CAMERA
+|--------------------------------------------------------------------------
+*/
+
+async function startCamera()
+{
     try {
 
-        statusText.innerText =
-            'Memuat model pengenalan wajah...';
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: "user",
+
+                    width: {
+                        ideal: 640
+                    },
+
+                    height: {
+                        ideal: 480
+                    }
+
+                },
+
+                audio: false
+
+            });
 
 
-        await faceapi.nets.tinyFaceDetector.loadFromUri(
-            '/models'
-        );
+        video.srcObject =
+            stream;
 
 
-        await faceapi.nets.faceLandmark68Net.loadFromUri(
-            '/models'
-        );
+        await new Promise(resolve => {
+
+            video.onloadedmetadata = () => {
+
+                video.play();
+
+                resolve();
+
+            };
+
+        });
 
 
-        await faceapi.nets.faceRecognitionNet.loadFromUri(
-            '/models'
-        );
+        cameraStatus.innerText =
+            "Kamera aktif";
 
 
-        modelsLoaded = true;
-
-
-        statusText.innerText =
-            'Model berhasil dimuat. Silakan aktifkan kamera.';
-
-
-        startCameraButton.disabled =
-            false;
-
-        startCameraButton.innerText =
-            'Aktifkan Kamera';
-
+        return true;
 
     } catch (error) {
 
-        console.error(
-            'MODEL ERROR:',
-            error
-        );
+        console.error(error);
 
 
-        statusText.innerText =
-            'Model wajah gagal dimuat. Periksa folder public/models.';
+        cameraStatus.innerText =
+            "Kamera gagal digunakan.";
 
 
-        startCameraButton.innerText =
-            'Model Gagal Dimuat';
+        message.innerText =
+            "Akses kamera ditolak atau kamera sedang digunakan aplikasi lain.";
 
+
+        message.className =
+            "mt-4 text-center text-sm text-red-400";
+
+
+        return false;
     }
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| DISTANCE
+|--------------------------------------------------------------------------
+*/
 
-// ======================================================
-// AKTIFKAN KAMERA
-// ======================================================
-
-startCameraButton.addEventListener(
-    'click',
-    async function ()
-    {
-
-        if (
-            ! navigator.mediaDevices ||
-            ! navigator.mediaDevices.getUserMedia
-        ) {
-
-            statusText.innerText =
-                'Browser tidak mendukung akses kamera.';
-
-            return;
-        }
-
-
-        try {
-
-            statusText.innerText =
-                'Meminta izin kamera...';
-
-
-            cameraStream =
-                await navigator.mediaDevices.getUserMedia({
-
-                    video: {
-                        facingMode: 'user',
-                        width: {
-                            ideal: 640
-                        },
-                        height: {
-                            ideal: 480
-                        }
-                    },
-
-                    audio: false
-
-                });
-
-
-            video.srcObject =
-                cameraStream;
-
-
-            await video.play();
-
-
-            startCameraButton.disabled =
-                true;
-
-            startCameraButton.innerText =
-                'Kamera Aktif';
-
-
-            verifyFaceButton.disabled =
-                false;
-
-
-            statusText.innerText =
-                'Kamera aktif. Posisikan wajah di tengah.';
-
-
-            startLivenessDetection();
-
-
-        } catch (error) {
-
-            console.error(
-                'CAMERA ERROR:',
-                error
-            );
-
-
-            if (
-                error.name ===
-                'NotAllowedError'
-            ) {
-
-                statusText.innerText =
-                    'Akses kamera ditolak. Izinkan kamera pada browser.';
-
-            } else if (
-                error.name ===
-                'NotFoundError'
-            ) {
-
-                statusText.innerText =
-                    'Kamera tidak ditemukan.';
-
-            } else {
-
-                statusText.innerText =
-                    'Kamera tidak dapat digunakan.';
-            }
-
-        }
-
-    }
-);
-
-
-
-// ======================================================
-// LIVENESS DETECTION
-// ======================================================
-//
-// Metode sederhana:
-// sistem mendeteksi perubahan rasio mata
-// untuk mengenali kedipan.
-//
-// ======================================================
-
-function calculateEyeAspectRatio(eye)
+function distance(point1, point2)
 {
+    return Math.sqrt(
+        Math.pow(
+            point1.x - point2.x,
+            2
+        )
+        +
+        Math.pow(
+            point1.y - point2.y,
+            2
+        )
+    );
+}
 
+
+/*
+|--------------------------------------------------------------------------
+| EAR
+|--------------------------------------------------------------------------
+*/
+
+function calculateEAR(eye)
+{
     const vertical1 =
         distance(
             eye[1],
@@ -365,342 +431,1041 @@ function calculateEyeAspectRatio(eye)
         );
 
 
+    if (
+        horizontal === 0
+    ) {
+
+        return 0;
+
+    }
+
+
     return (
-        vertical1 +
-        vertical2
-    ) / (
-        2 *
-        horizontal
+        (vertical1 + vertical2)
+        /
+        (2 * horizontal)
     );
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| HEAD DIRECTION
+|--------------------------------------------------------------------------
+*/
 
-function distance(point1, point2)
+function getHeadDirection(landmarks)
 {
-
-    const x =
-        point1.x -
-        point2.x;
+    const nose =
+        landmarks.getNose();
 
 
-    const y =
-        point1.y -
-        point2.y;
+    const jaw =
+        landmarks.getJawOutline();
 
 
-    return Math.sqrt(
-        x * x +
-        y * y
-    );
+    const noseX =
+        nose[3].x;
+
+
+    const leftSide =
+        jaw[0].x;
+
+
+    const rightSide =
+        jaw[16].x;
+
+
+    const faceWidth =
+        rightSide - leftSide;
+
+
+    if (
+        faceWidth <= 0
+    ) {
+
+        return null;
+
+    }
+
+
+    const relativePosition =
+        (noseX - leftSide)
+        /
+        faceWidth;
+
+
+    if (
+        relativePosition > 0.57
+    ) {
+
+        return "left";
+
+    }
+
+
+    if (
+        relativePosition < 0.43
+    ) {
+
+        return "right";
+
+    }
+
+
+    return "center";
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| INSTRUCTION
+|--------------------------------------------------------------------------
+*/
 
-// ======================================================
-// LIVENESS PROCESS
-// ======================================================
+function getInstruction(action)
+{
+    if (
+        action === "blink"
+    ) {
+
+        return "👁️ Kedipkan mata satu kali.";
+
+    }
+
+
+    if (
+        action === "left"
+    ) {
+
+        return "⬅️ Gerakkan kepala ke kiri.";
+
+    }
+
+
+    if (
+        action === "right"
+    ) {
+
+        return "➡️ Gerakkan kepala ke kanan.";
+
+    }
+
+
+    return "Ikuti instruksi.";
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RESET BLINK
+|--------------------------------------------------------------------------
+*/
+
+function resetBlink()
+{
+    earSamples = [];
+
+    baselineEAR = null;
+
+    eyeWasClosed = false;
+
+    blinkCooldown = false;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| TIMER
+|--------------------------------------------------------------------------
+*/
+
+function startChallengeTimer()
+{
+    clearTimeout(
+        challengeTimer
+    );
+
+
+    challengeTimer =
+        setTimeout(() => {
+
+            if (
+                !livenessPassed &&
+                currentStep <
+                livenessChallenge.length
+            ) {
+
+                failLiveness(
+                    "⏱️ Challenge terlalu lama. Silakan ulangi liveness."
+                );
+
+            }
+
+        }, MAX_CHALLENGE_TIME);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| STOP TIMER
+|--------------------------------------------------------------------------
+*/
+
+function stopChallengeTimer()
+{
+    clearTimeout(
+        challengeTimer
+    );
+
+    challengeTimer =
+        null;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SHOW CHALLENGE
+|--------------------------------------------------------------------------
+*/
+
+function showCurrentChallenge()
+{
+    if (
+        !livenessChallenge.length
+    ) {
+
+        challengeTitle.innerText =
+            "Challenge tidak ditemukan";
+
+
+        instruction.innerText =
+            "Silakan refresh halaman.";
+
+
+        return;
+
+    }
+
+
+    const action =
+        livenessChallenge[
+            currentStep
+        ];
+
+
+    challengeTitle.innerText =
+        action.toUpperCase();
+
+
+    instruction.innerText =
+        getInstruction(action);
+
+
+    challengeCounter.innerText =
+        `${currentStep + 1} / ${livenessChallenge.length}`;
+
+
+    progressBar.style.width =
+        `${(
+            currentStep /
+            livenessChallenge.length
+        ) * 100}%`;
+
+
+    livenessStatus.innerText =
+        "Menunggu aksi...";
+
+
+    livenessStatus.className =
+        "mt-4 text-center text-sm text-slate-300";
+
+
+    resetBlink();
+
+
+    startChallengeTimer();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FAIL
+|--------------------------------------------------------------------------
+*/
+
+function failLiveness(reason)
+{
+    stopChallengeTimer();
+
+
+    livenessPassed =
+        false;
+
+
+    currentStep =
+        0;
+
+
+    savedDescriptor =
+        null;
+
+
+    verifyButton.disabled =
+        true;
+
+
+    retryButton.classList.remove(
+        "hidden"
+    );
+
+
+    challengeTitle.innerText =
+        "LIVENESS GAGAL";
+
+
+    challengeCounter.innerText =
+        "0 / 3";
+
+
+    instruction.innerText =
+        reason;
+
+
+    livenessStatus.innerText =
+        "Tekan tombol Ulangi Liveness untuk mencoba lagi.";
+
+
+    livenessStatus.className =
+        "mt-4 text-center text-sm text-red-400 font-semibold";
+
+
+    progressBar.style.width =
+        "0%";
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NEXT
+|--------------------------------------------------------------------------
+*/
+
+async function moveToNextChallenge()
+{
+    stopChallengeTimer();
+
+
+    currentStep++;
+
+
+    if (
+        currentStep >=
+        livenessChallenge.length
+    ) {
+
+        await completeLiveness();
+
+        return;
+
+    }
+
+
+    showCurrentChallenge();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| COMPLETE
+|--------------------------------------------------------------------------
+*/
+
+async function completeLiveness()
+{
+    livenessPassed =
+        true;
+
+
+    progressBar.style.width =
+        "100%";
+
+
+    challengeCounter.innerText =
+        `${livenessChallenge.length} / ${livenessChallenge.length}`;
+
+
+    challengeTitle.innerText =
+        "LIVENESS BERHASIL";
+
+
+    instruction.innerText =
+        "✅ Semua challenge berhasil dilakukan.";
+
+
+    livenessStatus.innerText =
+        "Mengambil data wajah...";
+
+
+    livenessStatus.className =
+        "mt-4 text-center text-sm text-emerald-400 font-semibold";
+
+
+    retryButton.classList.add(
+        "hidden"
+    );
+
+
+    try {
+
+        const detection =
+            await faceapi
+                .detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions({
+
+                        inputSize: 320,
+
+                        scoreThreshold: 0.45
+
+                    })
+                )
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+
+        if (!detection) {
+
+            failLiveness(
+                "❌ Wajah tidak terdeteksi setelah liveness selesai."
+            );
+
+            return;
+
+        }
+
+
+        savedDescriptor =
+            Array.from(
+                detection.descriptor
+            );
+
+
+        livenessStatus.innerText =
+            "✅ Liveness dan wajah berhasil dibaca.";
+
+
+        instruction.innerText =
+            "Sekarang klik Verifikasi Wajah.";
+
+
+        verifyButton.disabled =
+            false;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        failLiveness(
+            "❌ Data wajah gagal dibaca. Silakan ulangi."
+        );
+
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| BLINK
+|--------------------------------------------------------------------------
+*/
+
+function detectBlink(landmarks)
+{
+    const leftEye =
+        landmarks.getLeftEye();
+
+
+    const rightEye =
+        landmarks.getRightEye();
+
+
+    const leftEAR =
+        calculateEAR(
+            leftEye
+        );
+
+
+    const rightEAR =
+        calculateEAR(
+            rightEye
+        );
+
+
+    const currentEAR =
+        (
+            leftEAR +
+            rightEAR
+        )
+        /
+        2;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CALIBRATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        baselineEAR === null
+    ) {
+
+        earSamples.push(
+            currentEAR
+        );
+
+
+        livenessStatus.innerText =
+            `Kalibrasi mata... ${earSamples.length}/${CALIBRATION_SAMPLES}`;
+
+
+        if (
+            earSamples.length >=
+            CALIBRATION_SAMPLES
+        ) {
+
+            baselineEAR =
+                earSamples.reduce(
+                    (a, b) => a + b,
+                    0
+                )
+                /
+                earSamples.length;
+
+
+            livenessStatus.innerText =
+                "Kalibrasi selesai. Kedipkan mata satu kali.";
+
+        }
+
+
+        return false;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOLERANT THRESHOLD
+    |--------------------------------------------------------------------------
+    */
+
+    const closeThreshold =
+        baselineEAR * 0.88;
+
+
+    const openThreshold =
+        baselineEAR * 0.94;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSED
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        currentEAR <
+        closeThreshold
+        &&
+        !eyeWasClosed
+        &&
+        !blinkCooldown
+    ) {
+
+        eyeWasClosed =
+            true;
+
+
+        livenessStatus.innerText =
+            "😑 Mata tertutup... buka kembali.";
+
+
+        return false;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | OPEN AGAIN
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        eyeWasClosed
+        &&
+        currentEAR >
+        openThreshold
+        &&
+        !blinkCooldown
+    ) {
+
+        eyeWasClosed =
+            false;
+
+
+        blinkCooldown =
+            true;
+
+
+        livenessStatus.innerText =
+            "✅ Kedipan terdeteksi!";
+
+
+        setTimeout(() => {
+
+            blinkCooldown =
+                false;
+
+        }, 700);
+
+
+        return true;
+
+    }
+
+
+    if (
+        !eyeWasClosed
+    ) {
+
+        livenessStatus.innerText =
+            "👁️ Silakan kedipkan mata...";
+
+    }
+
+
+    return false;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| DETECT
+|--------------------------------------------------------------------------
+*/
+
+async function detectLiveness()
+{
+    if (
+        isDetecting ||
+        livenessPassed ||
+        !video.srcObject
+    ) {
+
+        return;
+
+    }
+
+
+    isDetecting =
+        true;
+
+
+    try {
+
+        const detection =
+            await faceapi
+                .detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions({
+
+                        inputSize: 320,
+
+                        scoreThreshold: 0.45
+
+                    })
+                )
+                .withFaceLandmarks();
+
+
+        if (!detection) {
+
+            livenessStatus.innerText =
+                "❌ Wajah tidak terdeteksi. Posisikan wajah di depan kamera.";
+
+
+            isDetecting =
+                false;
+
+
+            return;
+
+        }
+
+
+        const action =
+            livenessChallenge[
+                currentStep
+            ];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BLINK
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            action === "blink"
+        ) {
+
+            const success =
+                detectBlink(
+                    detection.landmarks
+                );
+
+
+            if (success) {
+
+                await moveToNextChallenge();
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LEFT
+        |--------------------------------------------------------------------------
+        */
+
+        else if (
+            action === "left"
+        ) {
+
+            const direction =
+                getHeadDirection(
+                    detection.landmarks
+                );
+
+
+            if (
+                direction === "left"
+            ) {
+
+                livenessStatus.innerText =
+                    "✅ Gerakan kiri terdeteksi!";
+
+
+                await moveToNextChallenge();
+
+            } else {
+
+                livenessStatus.innerText =
+                    "⬅️ Gerakkan kepala ke kiri...";
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RIGHT
+        |--------------------------------------------------------------------------
+        */
+
+        else if (
+            action === "right"
+        ) {
+
+            const direction =
+                getHeadDirection(
+                    detection.landmarks
+                );
+
+
+            if (
+                direction === "right"
+            ) {
+
+                livenessStatus.innerText =
+                    "✅ Gerakan kanan terdeteksi!";
+
+
+                await moveToNextChallenge();
+
+            } else {
+
+                livenessStatus.innerText =
+                    "➡️ Gerakkan kepala ke kanan...";
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Liveness detection error:",
+            error
+        );
+
+    }
+
+
+    isDetecting =
+        false;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| START
+|--------------------------------------------------------------------------
+*/
 
 function startLivenessDetection()
 {
+    showCurrentChallenge();
 
-    const interval =
+
+    clearInterval(
+        detectionInterval
+    );
+
+
+    detectionInterval =
         setInterval(
-            async function ()
-            {
-
-                if (
-                    !cameraStream ||
-                    blinkDetected
-                ) {
-
-                    clearInterval(interval);
-
-                    return;
-                }
-
-
-                const detection =
-                    await faceapi
-                        .detectSingleFace(
-                            video,
-                            new faceapi.TinyFaceDetectorOptions({
-                                inputSize: 224,
-                                scoreThreshold: 0.5
-                            })
-                        )
-                        .withFaceLandmarks();
-
-
-                if (!detection) {
-
-                    statusText.innerText =
-                        'Wajah belum terdeteksi. Posisikan wajah di tengah kamera.';
-
-                    return;
-                }
-
-
-                const landmarks =
-                    detection.landmarks;
-
-
-                const leftEye =
-                    landmarks.getLeftEye();
-
-
-                const rightEye =
-                    landmarks.getRightEye();
-
-
-                const leftEAR =
-                    calculateEyeAspectRatio(
-                        leftEye
-                    );
-
-
-                const rightEAR =
-                    calculateEyeAspectRatio(
-                        rightEye
-                    );
-
-
-                const averageEAR =
-                    (
-                        leftEAR +
-                        rightEAR
-                    ) / 2;
-
-                console.log('LEFT EAR:', leftEAR);
-                console.log('RIGHT EAR:', rightEAR);
-                console.log('AVERAGE EAR:', averageEAR);
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | DETEKSI KEDIP
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    averageEAR < 0.30
-                ) {
-
-                    blinkDetected =
-                        true;
-
-                    livenessPassed =
-                        true;
-
-
-                    statusText.innerText =
-                        'Kedipan terdeteksi. Liveness berhasil. Silakan verifikasi wajah.';
-
-                } else {
-
-                    statusText.innerText =
-                        'Wajah terdeteksi. Silakan berkedip untuk verifikasi liveness.';
-
-                }
-
-            },
-            100
+            detectLiveness,
+            180
         );
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| RETRY
+|--------------------------------------------------------------------------
+*/
 
-// ======================================================
-// VERIFIKASI WAJAH
-// ======================================================
-
-verifyFaceButton.addEventListener(
-    'click',
-    async function ()
+retryButton.addEventListener(
+    "click",
+    function()
     {
 
-        if (!modelsLoaded) {
-
-            statusText.innerText =
-                'Model belum selesai dimuat.';
-
-            return;
-        }
+        retryButton.classList.add(
+            "hidden"
+        );
 
 
-        if (!cameraStream) {
-
-            statusText.innerText =
-                'Aktifkan kamera terlebih dahulu.';
-
-            return;
-        }
-
-
-        if (!livenessPassed) {
-
-            statusText.innerText =
-                'Silakan berkedip terlebih dahulu.';
-
-            return;
-        }
-
-
-        verifyFaceButton.disabled =
+        verifyButton.disabled =
             true;
 
 
-        statusText.innerText =
-            'Menganalisis wajah...';
+        message.innerText =
+            "";
+
+
+        livenessPassed =
+            false;
+
+
+        currentStep =
+            0;
+
+
+        savedDescriptor =
+            null;
+
+
+        resetBlink();
+
+
+        startLivenessDetection();
+
+    }
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| VERIFY
+|--------------------------------------------------------------------------
+*/
+
+verifyButton.addEventListener(
+    "click",
+    async function()
+    {
+
+        if (
+            !livenessPassed
+        ) {
+
+            message.innerText =
+                "Selesaikan liveness terlebih dahulu.";
+
+
+            message.className =
+                "mt-4 text-center text-sm text-red-400";
+
+
+            return;
+
+        }
+
+
+        if (
+            !savedDescriptor
+        ) {
+
+            message.innerText =
+                "Data wajah belum tersedia. Silakan ulangi liveness.";
+
+
+            message.className =
+                "mt-4 text-center text-sm text-red-400";
+
+
+            return;
+
+        }
+
+
+        verifyButton.disabled =
+            true;
+
+
+        retryButton.classList.add(
+            "hidden"
+        );
+
+
+        message.innerText =
+            "Memverifikasi wajah...";
+
+
+        message.className =
+            "mt-4 text-center text-sm text-slate-300";
 
 
         try {
 
-
-            // ==================================================
-            // DETEKSI + FACE DESCRIPTOR
-            // ==================================================
-
-            const detection =
-                await faceapi
-                    .detectSingleFace(
-                        video,
-                        new faceapi.TinyFaceDetectorOptions({
-                            inputSize: 224,
-                            scoreThreshold: 0.5
-                        })
+            const csrfToken =
+                document
+                    .querySelector(
+                        'meta[name="csrf-token"]'
                     )
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
+                    ?.getAttribute(
+                        "content"
+                    );
 
 
-            if (!detection) {
+            if (!csrfToken) {
 
-                statusText.innerText =
-                    'Wajah tidak terdeteksi.';
+                throw new Error(
+                    "CSRF token tidak ditemukan."
+                );
 
-                verifyFaceButton.disabled =
-                    false;
-
-                return;
             }
 
 
-            // ==================================================
-            // DESCRIPTOR
-            // ==================================================
-
-            const descriptor =
-                Array.from(
-                    detection.descriptor
-                );
-
-
-            console.log(
-                'Current face embedding:',
-                descriptor
-            );
-
-
-            // ==================================================
-            // KIRIM KE LARAVEL
-            // ==================================================
-
             const response =
                 await fetch(
-                    '{{ route("face.verification.verify") }}',
+                    "{{ route('face.verification.verify') }}",
                     {
 
-                        method: 'POST',
+                        method: "POST",
 
                         headers: {
 
-                            'Content-Type':
-                                'application/json',
+                            "Content-Type":
+                                "application/json",
 
-                            'Accept':
-                                'application/json',
+                            "Accept":
+                                "application/json",
 
-                            'X-CSRF-TOKEN':
-                                '{{ csrf_token() }}'
+                            "X-CSRF-TOKEN":
+                                csrfToken
 
                         },
 
-                        body: JSON.stringify({
+                        credentials:
+                            "same-origin",
 
-                            face_embedding:
-                                descriptor,
+                        body:
+                            JSON.stringify({
 
-                            liveness_passed:
-                                livenessPassed
+                                face_embedding:
+                                    savedDescriptor,
 
-                        })
+                                liveness_passed:
+                                    true,
+
+                                liveness_sequence:
+                                    livenessChallenge
+
+                            })
 
                     }
                 );
 
 
-            const result =
+            const data =
                 await response.json();
 
 
-            if (!response.ok) {
+            if (
+                !response.ok ||
+                !data.success
+            ) {
 
                 throw new Error(
-                    result.message ||
-                    'Verifikasi wajah gagal.'
+                    data.message ||
+                    "Verifikasi wajah gagal."
                 );
-            }
-
-
-            // ==================================================
-            // BERHASIL
-            // ==================================================
-
-            statusText.innerText =
-                result.message;
-
-
-            // Matikan kamera
-
-            if (cameraStream) {
-
-                cameraStream
-                    .getTracks()
-                    .forEach(
-                        track => track.stop()
-                    );
 
             }
 
 
-            // Redirect
+            message.innerText =
+                data.message ||
+                "Verifikasi wajah berhasil.";
 
-            setTimeout(
-                function ()
-                {
 
-                    window.location.href =
-                        result.redirect;
+            message.className =
+                "mt-4 text-center text-sm text-emerald-400 font-semibold";
 
-                },
-                1000
-            );
+
+            setTimeout(() => {
+
+                window.location.href =
+                    data.redirect;
+
+            }, 1000);
 
 
         } catch (error) {
 
-            console.error(
-                'VERIFICATION ERROR:',
-                error
-            );
+            console.error(error);
 
 
-            statusText.innerText =
+            message.innerText =
                 error.message;
 
 
-            verifyFaceButton.disabled =
+            message.className =
+                "mt-4 text-center text-sm text-red-400";
+
+
+            verifyButton.disabled =
                 false;
 
         }
@@ -709,16 +1474,83 @@ verifyFaceButton.addEventListener(
 );
 
 
+/*
+|--------------------------------------------------------------------------
+| INITIALIZE
+|--------------------------------------------------------------------------
+*/
 
-// ======================================================
-// START
-// ======================================================
+async function initialize()
+{
+    try {
 
-loadModels();
+        await loadModels();
+
+
+        const cameraStarted =
+            await startCamera();
+
+
+        if (!cameraStarted) {
+
+            return;
+
+        }
+
+
+        await new Promise(resolve => {
+
+            if (
+                video.readyState >= 3
+            ) {
+
+                resolve();
+
+            } else {
+
+                video.addEventListener(
+                    "canplay",
+                    resolve,
+                    {
+                        once: true
+                    }
+                );
+
+            }
+
+        });
+
+
+        livenessStatus.innerText =
+            "Kamera siap. Ikuti challenge.";
+
+
+        startLivenessDetection();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        message.innerText =
+            "Gagal menyiapkan sistem face recognition.";
+
+
+        message.className =
+            "mt-4 text-center text-sm text-red-400";
+
+    }
+}
+
+
+initialize();
 
 </script>
-
 
 </body>
 
 </html>
+```

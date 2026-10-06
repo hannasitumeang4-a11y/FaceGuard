@@ -7,7 +7,7 @@ use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseCo
 class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
 {
     /**
-     * Response setelah OTP berhasil.
+     * Handle successful two-factor authentication.
      */
     public function toResponse($request)
     {
@@ -15,29 +15,51 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
 
         /*
         |--------------------------------------------------------------------------
-        | WAJIB REGISTRASI WAJAH
+        | OTP BERHASIL
+        |--------------------------------------------------------------------------
+        */
+
+        session([
+            'otp_verified' => true,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET FACE VERIFICATION
         |--------------------------------------------------------------------------
         |
-        | Jika user belum memiliki face profile,
-        | arahkan ke registrasi wajah terlebih dahulu.
+        | Setiap login baru harus melakukan verifikasi wajah lagi.
         |
         */
 
-        if ($user && ! $user->faceProfile) {
+        session()->forget([
+            'face_verified',
+            'face_verified_at',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | BELUM ADA FACE PROFILE
+        |--------------------------------------------------------------------------
+        |
+        | User sudah lolos OTP tetapi belum pernah mendaftarkan
+        | wajahnya.
+        |
+        */
+
+        if (!$user || !$user->faceProfile) {
 
             return redirect()->route(
                 'face.registration'
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | WAJIB VERIFIKASI WAJAH
+        | SUDAH ADA FACE PROFILE
         |--------------------------------------------------------------------------
         |
-        | Jika wajah sudah terdaftar,
-        | user TIDAK boleh langsung masuk dashboard.
+        | User tinggal melakukan face verification.
         |
         */
 
