@@ -25,7 +25,7 @@ class DashboardController extends Controller
             'user_id',
             $userId
         )
-            ->where('type', 'expense')
+            ->whereIn('type', ['expense', 'withdraw'])
             ->where('status', 'success')
             ->sum('amount');
 

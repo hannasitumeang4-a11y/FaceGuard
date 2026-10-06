@@ -964,11 +964,11 @@ function detectBlink(landmarks)
     */
 
     const closeThreshold =
-        baselineEAR * 0.88;
+        baselineEAR * 0.92;
 
 
     const openThreshold =
-        baselineEAR * 0.94;
+        baselineEAR * 0.97;
 
 
     /*
@@ -1244,7 +1244,7 @@ function startLivenessDetection()
     detectionInterval =
         setInterval(
             detectLiveness,
-            180
+            120
         );
 }
 

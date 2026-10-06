@@ -215,6 +215,23 @@
                             Tambah Transaksi
                         </a>
 
+                        {{-- TRANSFER --}}
+                        <a
+                            href="{{ route('transfer.create') }}"
+                            style="color: #ffffff !important; background-color: #16a34a !important;"
+                            class="inline-block px-5 py-2.5 font-semibold rounded-lg hover:opacity-90 transition"
+                        >
+                            Transfer
+                        </a>
+
+                        {{-- TARIK SALDO --}}
+                        <a
+                            href="{{ route('withdraw.create') }}"
+                            style="color: #ffffff !important; background-color: #dc2626 !important;"
+                            class="inline-block px-5 py-2.5 font-semibold rounded-lg hover:opacity-90 transition"
+                        >
+                            Tarik Saldo
+                        </a>
 
                         {{-- RIWAYAT TRANSAKSI --}}
                         <a

@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\FaceVerification;
 use Illuminate\Http\Request;
 
+
 class FaceVerificationController extends Controller
 {
     /**
      * Display face verification page.
      */
-    public function show()
+    public function show(Request $request)
     {
         /*
         |--------------------------------------------------------------------------
@@ -24,19 +25,10 @@ class FaceVerificationController extends Controller
 
         $user = auth()->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | HARUS SUDAH LOLOS OTP
-        |--------------------------------------------------------------------------
-        */
-
-        if (session('otp_verified') !== true) {
-            return redirect()->route('login');
-        }
 
         /*
         |--------------------------------------------------------------------------
-        | BELUM ADA FACE PROFILE
+        | CEK FACE PROFILE
         |--------------------------------------------------------------------------
         */
 
@@ -44,20 +36,71 @@ class FaceVerificationController extends Controller
             return redirect()->route('face.registration');
         }
 
+
         /*
         |--------------------------------------------------------------------------
-        | SUDAH VERIFIED
+        | TENTUKAN JENIS VERIFIKASI
         |--------------------------------------------------------------------------
         */
 
-        if (session('face_verified') === true) {
+        $verificationType =
+            $request->query(
+                'type',
+                'login'
+            );
+
+
+        if (
+            !in_array(
+                $verificationType,
+                ['login', 'transaction']
+            )
+        ) {
+
+            $verificationType =
+                'login';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFIKASI LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $verificationType === 'login'
+            &&
+            session('otp_verified') !== true
+        ) {
+
+            return redirect()->route('login');
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN SUDAH VERIFIED
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $verificationType === 'login'
+            &&
+            session('face_verified') === true
+        ) {
 
             if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+                return redirect()->route(
+                    'admin.dashboard'
+                );
             }
 
-            return redirect()->route('dashboard');
+            return redirect()->route(
+                'dashboard'
+            );
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -81,8 +124,11 @@ class FaceVerificationController extends Controller
         */
 
         session([
-            'face_liveness_challenge' => $challenge,
-            'face_liveness_type' => 'login',
+            'face_liveness_challenge' =>
+                $challenge,
+
+            'face_liveness_type' =>
+                $verificationType,
         ]);
 
 
@@ -92,7 +138,9 @@ class FaceVerificationController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('auth.face-verification');
+        return view(
+            'auth.face-verification'
+        );
     }
 
 
@@ -126,6 +174,7 @@ class FaceVerificationController extends Controller
             ],
         ]);
 
+
         /*
         |--------------------------------------------------------------------------
         | CEK LOGIN
@@ -136,25 +185,58 @@ class FaceVerificationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Sesi login tidak ditemukan.',
+                'message' =>
+                    'Sesi login tidak ditemukan.',
             ], 401);
         }
 
         $user = auth()->user();
 
+
         /*
         |--------------------------------------------------------------------------
-        | CEK OTP
+        | AMBIL JENIS VERIFIKASI DARI SESSION
         |--------------------------------------------------------------------------
         */
 
-        if (session('otp_verified') !== true) {
+        $verificationType =
+            session(
+                'face_liveness_type',
+                'login'
+            );
+
+
+        if (
+            !in_array(
+                $verificationType,
+                ['login', 'transaction']
+            )
+        ) {
+
+            $verificationType =
+                'login';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK OTP HANYA UNTUK LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $verificationType === 'login'
+            &&
+            session('otp_verified') !== true
+        ) {
 
             return response()->json([
                 'success' => false,
-                'message' => 'OTP belum diverifikasi.',
+                'message' =>
+                    'OTP belum diverifikasi.',
             ], 403);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -166,9 +248,11 @@ class FaceVerificationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Wajah Anda belum terdaftar.',
+                'message' =>
+                    'Wajah Anda belum terdaftar.',
             ], 422);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -186,7 +270,7 @@ class FaceVerificationController extends Controller
                     $user->faceProfile->id,
 
                 'verification_type' =>
-                    'login',
+                    $verificationType,
 
                 'liveness_passed' =>
                     false,
@@ -207,9 +291,11 @@ class FaceVerificationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Liveness detection gagal.',
+                'message' =>
+                    'Liveness detection gagal.',
             ], 422);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -218,11 +304,15 @@ class FaceVerificationController extends Controller
         */
 
         $sessionChallenge =
-            session('face_liveness_challenge');
+            session(
+                'face_liveness_challenge'
+            );
 
 
         $submittedChallenge =
-            $request->input('liveness_sequence');
+            $request->input(
+                'liveness_sequence'
+            );
 
 
         if (
@@ -264,7 +354,7 @@ class FaceVerificationController extends Controller
                     $user->faceProfile->id,
 
                 'verification_type' =>
-                    'login',
+                    $verificationType,
 
                 'liveness_passed' =>
                     false,
@@ -290,16 +380,19 @@ class FaceVerificationController extends Controller
             ], 422);
         }
 
+
         /*
         |--------------------------------------------------------------------------
         | AMBIL FACE EMBEDDING TERDAFTAR
         |--------------------------------------------------------------------------
         */
 
-        $registeredEmbedding = json_decode(
-            $user->faceProfile->face_embedding,
-            true
-        );
+        $registeredEmbedding =
+            json_decode(
+                $user->faceProfile->face_embedding,
+                true
+            );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -309,6 +402,7 @@ class FaceVerificationController extends Controller
 
         $currentEmbedding =
             $request->face_embedding;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -323,9 +417,11 @@ class FaceVerificationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajah terdaftar tidak valid.',
+                'message' =>
+                    'Data wajah terdaftar tidak valid.',
             ], 500);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -340,9 +436,11 @@ class FaceVerificationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Data wajah dari kamera tidak valid.',
+                'message' =>
+                    'Data wajah dari kamera tidak valid.',
             ], 422);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -352,20 +450,28 @@ class FaceVerificationController extends Controller
 
         $sum = 0;
 
-        for ($i = 0; $i < 128; $i++) {
+
+        for (
+            $i = 0;
+            $i < 128;
+            $i++
+        ) {
 
             $difference =
                 $currentEmbedding[$i]
                 -
                 $registeredEmbedding[$i];
 
+
             $sum +=
                 $difference *
                 $difference;
         }
 
+
         $distance =
             sqrt($sum);
+
 
         /*
         |--------------------------------------------------------------------------
@@ -374,7 +480,8 @@ class FaceVerificationController extends Controller
         */
 
         $threshold =
-            0.50;
+            0.60;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -382,7 +489,9 @@ class FaceVerificationController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($distance > $threshold) {
+        if (
+            $distance > $threshold
+        ) {
 
             FaceVerification::create([
                 'user_id' =>
@@ -392,7 +501,7 @@ class FaceVerificationController extends Controller
                     $user->faceProfile->id,
 
                 'verification_type' =>
-                    'login',
+                    $verificationType,
 
                 'liveness_passed' =>
                     true,
@@ -416,9 +525,13 @@ class FaceVerificationController extends Controller
                 'message' =>
                     'Wajah tidak cocok dengan wajah yang terdaftar.',
                 'distance' =>
-                    round($distance, 4),
+                    round(
+                        $distance,
+                        4
+                    ),
             ], 422);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -434,7 +547,7 @@ class FaceVerificationController extends Controller
                 $user->faceProfile->id,
 
             'verification_type' =>
-                'login',
+                $verificationType,
 
             'liveness_passed' =>
                 true,
@@ -467,39 +580,100 @@ class FaceVerificationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | WAJAH BERHASIL DIVERIFIKASI
+        | LOGIN
         |--------------------------------------------------------------------------
         */
 
-        session([
-            'face_verified' => true,
-            'face_verified_at' => now()->timestamp,
-        ]);
+        if (
+            $verificationType === 'login'
+        ) {
+
+            session([
+                'face_verified' =>
+                    true,
+
+                'face_verified_at' =>
+                    now()->timestamp,
+            ]);
+
+
+            if (
+                $user->role === 'admin'
+            ) {
+
+                $redirect =
+                    route(
+                        'admin.dashboard'
+                    );
+
+            } else {
+
+                $redirect =
+                    route(
+                        'dashboard'
+                    );
+            }
+
+        }
+
+
+       /*
+        |--------------------------------------------------------------------------
+        | TRANSACTION
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            session([
+                'transaction_face_verified' =>
+                    true,
+
+                'transaction_face_verified_at' =>
+                    now()->timestamp,
+            ]);
+
+
+            $redirectRoute =
+                session(
+                    'face_verification_redirect',
+                    'transactions.create'
+                );
+
+
+            session()->forget(
+                'face_verification_redirect'
+            );
+
+
+            $redirect =
+                route(
+                    $redirectRoute
+                );
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | REDIRECT
+        | RESPONSE
         |--------------------------------------------------------------------------
         */
 
-        if ($user->role === 'admin') {
-            $redirect =
-                route('admin.dashboard');
-        } else {
-            $redirect =
-                route('dashboard');
-        }
-
-
         return response()->json([
-            'success' => true,
+            'success' =>
+                true,
+
             'message' =>
                 'Verifikasi wajah berhasil.',
+
             'redirect' =>
                 $redirect,
+
             'distance' =>
-                round($distance, 4),
+                round(
+                    $distance,
+                    4
+                ),
         ]);
     }
 }

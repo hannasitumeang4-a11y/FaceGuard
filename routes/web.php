@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
     )->name('face.registration.store');
 
 
-    /*
+   /*
     |--------------------------------------------------------------------------
     | FACE VERIFICATION
     |--------------------------------------------------------------------------
@@ -103,6 +103,21 @@ Route::middleware('auth')->group(function () {
         [FaceVerificationController::class, 'verify']
     )->name('face.verification.verify');
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTION FACE VERIFICATION
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/transaction-face-verification',
+        function () {
+            return redirect()->route('face.verification', [
+                'type' => 'transaction'
+            ]);
+        }
+    )->name('transaction.face.verification');
 
     /*
     |--------------------------------------------------------------------------
@@ -134,6 +149,26 @@ Route::middleware('auth')->group(function () {
         '/transactions/{transaction}',
         [TransactionController::class, 'destroy']
     )->name('transactions.destroy');
+
+    Route::get(
+        '/transfer', 
+        [TransactionController::class, 'transfer']
+    )->name('transfer.create');
+
+    Route::post(
+        '/transfer', 
+        [TransactionController::class, 'processTransfer']
+    )->name('transfer.store');
+
+    Route::get(
+        '/withdraw',
+        [TransactionController::class, 'withdraw']
+    )->name('withdraw.create');
+
+    Route::post(
+        '/withdraw',
+        [TransactionController::class, 'processWithdraw']
+    )->name('withdraw.store');
 
 
     /*
