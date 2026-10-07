@@ -38,14 +38,113 @@ class CreateNewUser implements CreatesNewUsers
                 Rules\Password::defaults(),
             ],
 
+            'recovery_question_1' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'recovery_answer_1' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'recovery_question_2' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'recovery_answer_2' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'recovery_question_3' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'recovery_answer_3' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
         ])->validate();
 
 
-return User::create([
-    'name' => $input['name'],
-    'email' => strtolower($input['email']),
-    'password' => Hash::make($input['password']),
-    'role' => 'user',
-]);
+        return User::create([
+
+            'name' => $input['name'],
+
+            'email' => strtolower($input['email']),
+
+            'password' => Hash::make(
+                $input['password']
+            ),
+
+            'role' => 'user',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recovery Question 1
+            |--------------------------------------------------------------------------
+            */
+
+            'recovery_question_1' =>
+                $input['recovery_question_1'],
+
+            'recovery_answer_1' =>
+                Hash::make(
+                    strtolower(
+                        trim(
+                            $input['recovery_answer_1']
+                        )
+                    )
+                ),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recovery Question 2
+            |--------------------------------------------------------------------------
+            */
+
+            'recovery_question_2' =>
+                $input['recovery_question_2'],
+
+            'recovery_answer_2' =>
+                Hash::make(
+                    strtolower(
+                        trim(
+                            $input['recovery_answer_2']
+                        )
+                    )
+                ),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recovery Question 3
+            |--------------------------------------------------------------------------
+            */
+
+            'recovery_question_3' =>
+                $input['recovery_question_3'],
+
+            'recovery_answer_3' =>
+                Hash::make(
+                    strtolower(
+                        trim(
+                            $input['recovery_answer_3']
+                        )
+                    )
+                ),
+        ]);
     }
 }

@@ -111,21 +111,29 @@ return [
 
     'features' => [
 
-    Features::registration(),
+        Features::registration(),
 
-    Features::resetPasswords(),
+        /*
+        |--------------------------------------------------------------------------
+        | Password Reset
+        |--------------------------------------------------------------------------
+        |
+        | Password recovery menggunakan pertanyaan keamanan
+        | yang dibuat sendiri di aplikasi.
+        |
+        */
 
-    Features::updateProfileInformation(),
+        Features::updateProfileInformation(),
 
-    Features::updatePasswords(),
+        Features::updatePasswords(),
 
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => false,
-    ]),
+        Features::twoFactorAuthentication([
+            'confirm' => true,
+            'confirmPassword' => false,
+        ]),
 
-    Features::passkeys([
-        'confirmPassword' => true,
-    ]),
-],
+        Features::passkeys([
+            'confirmPassword' => true,
+        ]),
+    ],
 ];

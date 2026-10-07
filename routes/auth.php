@@ -3,11 +3,10 @@
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
-use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -65,34 +64,58 @@ Route::middleware('guest')->group(function () {
     |--------------------------------------------------------------------------
     | FORGOT PASSWORD
     |--------------------------------------------------------------------------
+    |
+    | Password recovery menggunakan pertanyaan keamanan.
+    |
     */
 
     Route::get(
         'forgot-password',
-        [PasswordResetLinkController::class, 'create']
+        [ForgotPasswordController::class, 'showEmailForm']
     )->name('password.request');
 
     Route::post(
         'forgot-password',
-        [PasswordResetLinkController::class, 'store']
-    );
+        [ForgotPasswordController::class, 'checkEmail']
+    )->name('password.recovery.email');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RECOVERY QUESTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        'forgot-password/questions',
+        [ForgotPasswordController::class, 'showQuestions']
+    )->name('password.recovery.questions');
+
+    Route::post(
+        'forgot-password/questions',
+        [ForgotPasswordController::class, 'verifyQuestions']
+    )->name('password.recovery.verify');
 
 
     /*
     |--------------------------------------------------------------------------
     | RESET PASSWORD
     |--------------------------------------------------------------------------
+    |
+    | Form password baru setelah semua pertanyaan keamanan
+    | berhasil diverifikasi.
+    |
     */
 
     Route::get(
-        'reset-password/{token}',
-        [NewPasswordController::class, 'create']
-    )->name('password.reset');
+        'forgot-password/reset',
+        [ForgotPasswordController::class, 'showResetForm']
+    )->name('password.recovery.reset');
 
     Route::post(
-        'reset-password',
-        [NewPasswordController::class, 'store']
-    );
+        'forgot-password/reset',
+        [ForgotPasswordController::class, 'resetPassword']
+    )->name('password.recovery.reset.store');
 });
 
 
@@ -108,6 +131,10 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | EMAIL VERIFICATION
     |--------------------------------------------------------------------------
+    |
+    | Bagian ini dibiarkan karena merupakan struktur autentikasi
+    | yang sudah ada pada project.
+    |
     */
 
     Route::get(

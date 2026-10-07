@@ -220,7 +220,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | TWO FACTOR RATE LIMITER
+        | TWO-FACTOR RATE LIMITER
         |--------------------------------------------------------------------------
         */
 
