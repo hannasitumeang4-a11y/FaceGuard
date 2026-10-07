@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\MfaSetupController;
+use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaceRegistrationController;
 use App\Http\Controllers\FaceVerificationController;
@@ -274,6 +275,33 @@ Route::middleware('auth')->group(function () {
     });
 
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| PASSWORD RECOVERY
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/forgot-password',
+    [PasswordRecoveryController::class, 'showEmailForm']
+)->name('password.request');
+
+Route::post(
+    '/forgot-password',
+    [PasswordRecoveryController::class, 'showSecurityQuestion']
+)->name('password.question');
+
+Route::post(
+    '/forgot-password/verify',
+    [PasswordRecoveryController::class, 'verifyAnswer']
+)->name('password.verify');
+
+Route::post(
+    '/forgot-password/reset',
+    [PasswordRecoveryController::class, 'resetPassword']
+)->name('password.reset');
 
 
 /*

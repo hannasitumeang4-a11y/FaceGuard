@@ -1,163 +1,460 @@
 <x-app-layout>
 
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Security Settings
-        </h2>
-    </x-slot>
+    <style>
+        nav {
+            display: none !important;
+        }
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        header {
+            display: none !important;
+        }
+    </style>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+    {{-- HEADER --}}
+    <div
+        class="border-b"
+        style="
+            background-color: #FFFFFF;
+            border-color: #E2E8F0;
+        "
+    >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div>
+                <p
+                    class="text-xs font-bold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    FACESHIELD
+                </p>
 
-                    <h3 class="text-lg font-semibold mb-4">
-                        Two-Factor Authentication
-                    </h3>
+                <h2
+                    class="font-semibold text-xl mt-1"
+                    style="color: #0F1B3D;"
+                >
+                    Security Settings
+                </h2>
+            </div>
 
-                    {{-- SUCCESS MESSAGE --}}
-                    @if (session('status') === 'two-factor-authentication-enabled')
-                        <div class="mb-4 p-4 bg-blue-100 text-blue-800 rounded">
-                            MFA berhasil dibuat. Silakan scan QR Code dan
-                            konfirmasi dengan kode dari Authenticator.
-                        </div>
-                    @endif
+            <div class="mt-4">
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="inline-flex items-center text-sm font-semibold px-4 py-2 rounded-lg transition"
+                    style="
+                        color: #0F1B3D;
+                        background-color: #F5F7FB;
+                        border: 1px solid #E2E8F0;
+                    "
+                >
+                    ← Kembali ke Dashboard
+                </a>
+            </div>
 
-                    @if (session('status') === 'two-factor-authentication-confirmed')
-                        <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
-                            MFA berhasil dikonfirmasi dan sekarang aktif.
-                        </div>
-                    @endif
+        </div>
+    </div>
 
-                    {{-- ERROR MESSAGE --}}
-                    @if ($errors->any())
-                        <div class="mb-4 p-4 bg-red-100 text-red-800 rounded">
-                            <strong>Terjadi kesalahan:</strong>
+    {{-- CONTENT --}}
+    <div
+        class="py-12 min-h-screen"
+        style="
+            background: linear-gradient(
+                180deg,
+                #F5F7FB 0%,
+                #EEF3FA 100%
+            );
+        "
+    >
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
 
-                            <ul class="mt-2 list-disc list-inside">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+            {{-- HERO CARD --}}
+            <div
+                class="mb-6 rounded-2xl p-6 shadow-sm"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #0F1B3D 0%,
+                        #1D3B82 100%
+                    );
+                    border-left: 5px solid #D4A72C;
+                "
+            >
+                <p
+                    class="text-xs font-semibold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    ACCOUNT SECURITY
+                </p>
 
+                <h1
+                    class="text-2xl font-bold mt-2"
+                    style="color: #FFFFFF;"
+                >
+                    Security Settings
+                </h1>
 
-                    {{-- MFA BELUM DIBUAT --}}
-                    @if (!auth()->user()->two_factor_secret)
+                <p
+                    class="text-sm mt-2"
+                    style="color: #CBD5E1;"
+                >
+                    Kelola keamanan akun FaceShield Anda dengan aman.
+                </p>
+            </div>
 
-                        <div class="border rounded-lg p-6">
+            {{-- STATUS --}}
+            @if (session('status') === 'two-factor-authentication-enabled')
+                <div
+                    class="mb-6 rounded-xl p-4"
+                    style="
+                        background-color: #F0FDF4;
+                        border: 1px solid #BBF7D0;
+                    "
+                >
+                    <p
+                        class="text-sm font-semibold"
+                        style="color: #15803D;"
+                    >
+                        Two-factor authentication berhasil diaktifkan.
+                    </p>
+                </div>
+            @endif
 
-                            <p class="mb-4">
-                                MFA belum diaktifkan.
-                            </p>
+            @if (session('status') === 'two-factor-authentication-confirmed')
+                <div
+                    class="mb-6 rounded-xl p-4"
+                    style="
+                        background-color: #F0FDF4;
+                        border: 1px solid #BBF7D0;
+                    "
+                >
+                    <p
+                        class="text-sm font-semibold"
+                        style="color: #15803D;"
+                    >
+                        Two-factor authentication berhasil dikonfirmasi.
+                    </p>
+                </div>
+            @endif
 
-                            <form method="POST"
-                                  action="{{ route('two-factor.enable') }}">
+            {{-- ERROR --}}
+            @if ($errors->any())
+                <div
+                    class="mb-6 rounded-xl p-4"
+                    style="
+                        background-color: #FEF2F2;
+                        border: 1px solid #FECACA;
+                    "
+                >
+                    <p
+                        class="text-sm font-semibold mb-2"
+                        style="color: #B91C1C;"
+                    >
+                        Terjadi kesalahan:
+                    </p>
 
-                                @csrf
+                    <ul
+                        class="list-disc list-inside text-sm"
+                        style="color: #DC2626;"
+                    >
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-                                <button type="submit"
-                                        style="padding: 10px 20px; background-color: blue; color: white; border-radius: 8px;">
-                                    Enable MFA
-                                </button>
+            {{-- SECURITY CARD --}}
+            <div
+                class="overflow-hidden shadow-lg sm:rounded-2xl"
+                style="
+                    background-color: #FFFFFF;
+                    border: 1px solid #E2E8F0;
+                "
+            >
+                <div class="p-6 sm:p-8">
 
-                            </form>
+                    {{-- TITLE --}}
+                    <div class="mb-6">
+                        <div class="flex items-center gap-3">
 
-                        </div>
-
-
-                    {{-- MFA SUDAH DIBUAT TAPI BELUM DIKONFIRMASI --}}
-                    @elseif (!auth()->user()->two_factor_confirmed_at)
-
-                        <div class="border rounded-lg p-6">
-
-                            <h4 class="text-lg font-semibold mb-4">
-                                Setup Authenticator
-                            </h4>
-
-                            <p class="mb-4 text-gray-600 dark:text-gray-300">
-                                Scan QR Code berikut menggunakan Google
-                                Authenticator atau Microsoft Authenticator.
-                            </p>
-
-                            {{-- QR CODE --}}
-                            <div class="mb-6">
-                                {!! auth()->user()->twoFactorQrCodeSvg() !!}
+                            <div
+                                class="w-11 h-11 rounded-xl flex items-center justify-center"
+                                style="
+                                    background-color: #EFF6FF;
+                                    color: #2563EB;
+                                "
+                            >
+                                🛡
                             </div>
 
-                            <p class="mb-4">
-                                Masukkan kode 6 digit yang muncul pada
-                                aplikasi Authenticator.
+                            <div>
+                                <h3
+                                    class="text-lg font-bold"
+                                    style="color: #0F1B3D;"
+                                >
+                                    Two-Factor Authentication
+                                </h3>
+
+                                <p
+                                    class="text-sm mt-1"
+                                    style="color: #64748B;"
+                                >
+                                    Tambahkan lapisan keamanan tambahan pada akun Anda.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- 2FA NOT ENABLED --}}
+                    @if (!auth()->user()->two_factor_secret)
+
+                        <div
+                            class="rounded-xl p-5 mb-6"
+                            style="
+                                background-color: #F8FAFC;
+                                border: 1px solid #E2E8F0;
+                            "
+                        >
+                            <p
+                                class="text-sm font-semibold"
+                                style="color: #0F1B3D;"
+                            >
+                                Status Keamanan
                             </p>
 
-                            {{-- CONFIRM FORM --}}
-                            <form method="POST"
-                                  action="{{ route('two-factor.confirm') }}">
+                            <div class="flex items-center gap-2 mt-2">
+                                <span
+                                    class="w-2.5 h-2.5 rounded-full"
+                                    style="background-color: #EF4444;"
+                                ></span>
 
-                                @csrf
+                                <span
+                                    class="text-sm"
+                                    style="color: #64748B;"
+                                >
+                                    Two-factor authentication belum aktif.
+                                </span>
+                            </div>
+                        </div>
 
-                                <div class="mb-4">
+                        <form method="POST" action="{{ route('two-factor.enable') }}">
+                            @csrf
 
-                                    <label for="code"
-                                           class="block text-sm font-medium mb-2">
+                            <button
+                                type="submit"
+                                class="w-full inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold text-white transition"
+                                style="
+                                    background: linear-gradient(
+                                        135deg,
+                                        #2563EB 0%,
+                                        #1D4ED8 100%
+                                    );
+                                "
+                            >
+                                Aktifkan Two-Factor Authentication
+                            </button>
+                        </form>
+
+                    @else
+
+                        {{-- 2FA ENABLED --}}
+                        <div
+                            class="rounded-xl p-5 mb-6"
+                            style="
+                                background-color: #F0FDF4;
+                                border: 1px solid #BBF7D0;
+                            "
+                        >
+                            <div class="flex items-center gap-3">
+
+                                <div
+                                    class="w-10 h-10 rounded-full flex items-center justify-center"
+                                    style="
+                                        background-color: #DCFCE7;
+                                        color: #15803D;
+                                    "
+                                >
+                                    ✓
+                                </div>
+
+                                <div>
+                                    <p
+                                        class="text-sm font-bold"
+                                        style="color: #166534;"
+                                    >
+                                        Two-factor authentication aktif
+                                    </p>
+
+                                    <p
+                                        class="text-xs mt-1"
+                                        style="color: #15803D;"
+                                    >
+                                        Akun Anda mendapatkan perlindungan tambahan.
+                                    </p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {{-- CONFIRMATION --}}
+                        @if (!auth()->user()->two_factor_confirmed_at)
+
+                            <div
+                                class="rounded-xl p-5 mb-6"
+                                style="
+                                    background-color: #F8FAFC;
+                                    border: 1px solid #E2E8F0;
+                                "
+                            >
+
+                                <h4
+                                    class="text-base font-bold"
+                                    style="color: #0F1B3D;"
+                                >
+                                    Konfirmasi Authenticator
+                                </h4>
+
+                                <p
+                                    class="text-sm mt-2"
+                                    style="color: #64748B;"
+                                >
+                                    Scan QR Code menggunakan aplikasi authenticator,
+                                    kemudian masukkan kode 6 digit untuk mengonfirmasi.
+                                </p>
+
+                                <div
+                                    class="mt-5 flex justify-center p-4 rounded-xl"
+                                    style="
+                                        background-color: #FFFFFF;
+                                        border: 1px solid #E2E8F0;
+                                    "
+                                >
+                                    {!! auth()->user()->twoFactorQrCodeSvg() !!}
+                                </div>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('two-factor.confirm') }}"
+                                    class="mt-5"
+                                >
+                                    @csrf
+
+                                    <label
+                                        for="code"
+                                        class="block text-sm font-semibold mb-2"
+                                        style="color: #0F1B3D;"
+                                    >
                                         Kode Authenticator
                                     </label>
 
                                     <input
-                                        id="code"
-                                        name="code"
                                         type="text"
+                                        name="code"
+                                        id="code"
                                         inputmode="numeric"
-                                        pattern="[0-9]{6}"
                                         maxlength="6"
-                                        required
                                         autocomplete="one-time-code"
-                                        class="border rounded-lg p-2 w-48"
+                                        required
+                                        class="w-full rounded-xl px-4 py-3 text-center tracking-widest text-lg font-bold focus:outline-none focus:ring-2"
+                                        style="
+                                            border: 1px solid #CBD5E1;
+                                            color: #0F1B3D;
+                                            background-color: #FFFFFF;
+                                        "
+                                        placeholder="000000"
                                     >
+
+                                    <button
+                                        type="submit"
+                                        class="w-full mt-4 inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold text-white transition"
+                                        style="
+                                            background: linear-gradient(
+                                                135deg,
+                                                #2563EB 0%,
+                                                #1D4ED8 100%
+                                            );
+                                        "
+                                    >
+                                        Konfirmasi Kode
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        @else
+
+                            {{-- RECOVERY CODES --}}
+                            <div
+                                class="rounded-xl p-5"
+                                style="
+                                    background-color: #F8FAFC;
+                                    border: 1px solid #E2E8F0;
+                                "
+                            >
+
+                                <div class="flex items-start gap-3">
+
+                                    <div
+                                        class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style="
+                                            background-color: #FFF7E6;
+                                            color: #D4A72C;
+                                        "
+                                    >
+                                        🔑
+                                    </div>
+
+                                    <div>
+                                        <h4
+                                            class="text-base font-bold"
+                                            style="color: #0F1B3D;"
+                                        >
+                                            Recovery Codes
+                                        </h4>
+
+                                        <p
+                                            class="text-sm mt-1"
+                                            style="color: #64748B;"
+                                        >
+                                            Gunakan recovery codes jika Anda kehilangan
+                                            akses ke aplikasi authenticator.
+                                        </p>
+                                    </div>
 
                                 </div>
 
-                                <button type="submit"
-                                        style="padding: 10px 20px; background-color: green; color: white; border-radius: 8px;">
-                                    Confirm MFA
-                                </button>
+                                <a
+                                    href="{{ route('recovery-codes') }}"
+                                    class="mt-5 w-full inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold transition"
+                                    style="
+                                        color: #0F1B3D;
+                                        background-color: #F5F7FB;
+                                        border: 1px solid #E2E8F0;
+                                    "
+                                >
+                                    Lihat Recovery Codes
+                                </a>
 
-                            </form>
-
-                        </div>
-
-
-                    {{-- MFA SUDAH AKTIF --}}
-                    @else
-
-                        <div class="border rounded-lg p-6">
-
-                            <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
-                                <strong>MFA Aktif ✓</strong>
-                                <br>
-                                Akun kamu sekarang sudah menggunakan
-                                Two-Factor Authentication.
                             </div>
 
-                            <p class="mb-4">
-                                Authenticator berhasil dikonfigurasi.
-                            </p>
-
-                            {{-- RECOVERY CODES --}}
-                            <a href="{{ route('recovery-codes') }}"
-   style="display: inline-block; padding: 10px 20px; background-color: gray; color: white; border-radius: 8px;">
-    Lihat Recovery Codes
-</a>
-
-                        </div>
+                        @endif
 
                     @endif
 
                 </div>
+            </div>
 
+            {{-- FOOTER --}}
+            <div class="text-center mt-6">
+                <p
+                    class="text-xs"
+                    style="color: #94A3B8;"
+                >
+                    🛡 Dilindungi oleh keamanan FaceShield
+                    <span style="color: #CBD5E1;">•</span>
+                    Digital Banking Security
+                </p>
             </div>
 
         </div>
