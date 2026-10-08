@@ -1,30 +1,20 @@
 <x-guest-layout>
 
-    <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            Lupa Password
-        </h2>
-
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Masukkan email yang digunakan saat mendaftar.
-            Selanjutnya kamu akan diminta menjawab pertanyaan keamanan.
-        </p>
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Masukkan alamat email akun Anda untuk melanjutkan proses pemulihan password.
     </div>
 
-    @if (session('status'))
-        <div class="mb-4 rounded-md bg-green-100 p-4 text-sm text-green-700">
-            {{ session('status') }}
+    @if ($errors->any())
+        <div class="mb-4 text-sm text-red-600">
+            {{ $errors->first() }}
         </div>
     @endif
 
-    <form method="POST" action="{{ route('password.recovery.email') }}">
+    <form method="POST" action="{{ route('password.question') }}">
         @csrf
 
         <div>
-            <x-input-label
-                for="email"
-                :value="__('Email')"
-            />
+            <x-input-label for="email" :value="__('Email')" />
 
             <x-text-input
                 id="email"
@@ -34,7 +24,6 @@
                 :value="old('email')"
                 required
                 autofocus
-                autocomplete="email"
             />
 
             <x-input-error
@@ -43,21 +32,23 @@
             />
         </div>
 
-        <div class="flex items-center justify-end mt-6">
+        <div class="flex items-center justify-end mt-4">
 
-            <a
-                href="{{ route('login') }}"
-                class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900"
-            >
-                Kembali ke Login
-            </a>
-
-            <x-primary-button class="ms-4">
-                Lanjut
+            <x-primary-button>
+                Lanjutkan
             </x-primary-button>
 
         </div>
 
     </form>
+
+    <div class="mt-4 text-center">
+        <a
+            href="{{ route('login') }}"
+            class="text-sm text-blue-600 hover:text-blue-800"
+        >
+            Kembali ke Login
+        </a>
+    </div>
 
 </x-guest-layout>

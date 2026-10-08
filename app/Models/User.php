@@ -21,21 +21,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-
-        /*
-        |--------------------------------------------------------------------------
-        | Recovery Questions
-        |--------------------------------------------------------------------------
-        */
-
-        'recovery_question_1',
-        'recovery_answer_1',
-
-        'recovery_question_2',
-        'recovery_answer_2',
-
-        'recovery_question_3',
-        'recovery_answer_3',
+        'security_question',
+        'security_answer',
     ];
 
     protected $hidden = [
@@ -44,16 +31,6 @@ class User extends Authenticatable
 
         'two_factor_secret',
         'two_factor_recovery_codes',
-
-        /*
-        |--------------------------------------------------------------------------
-        | Recovery Answers
-        |--------------------------------------------------------------------------
-        */
-
-        'recovery_answer_1',
-        'recovery_answer_2',
-        'recovery_answer_3',
     ];
 
     protected function casts(): array

@@ -50,6 +50,18 @@ class RegisteredUserController extends Controller
                 'confirmed',
                 Rules\Password::defaults(),
             ],
+
+            'security_question' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'security_answer' => [
+                'required',
+                'string',
+                'max:255',
+            ],
         ]);
 
         /*
@@ -70,6 +82,8 @@ class RegisteredUserController extends Controller
             'email' => strtolower($request->email),
             'password' => Hash::make($request->password),
             'role' => 'user',
+            'security_question' => $request->security_question,
+            'security_answer' => Hash::make($request->security_answer),
         ]);
 
         event(new Registered($user));

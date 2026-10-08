@@ -113,16 +113,6 @@ return [
 
         Features::registration(),
 
-        /*
-        |--------------------------------------------------------------------------
-        | Password Reset
-        |--------------------------------------------------------------------------
-        |
-        | Password recovery menggunakan pertanyaan keamanan
-        | yang dibuat sendiri di aplikasi.
-        |
-        */
-
         Features::updateProfileInformation(),
 
         Features::updatePasswords(),

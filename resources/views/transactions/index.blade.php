@@ -1,270 +1,364 @@
 <x-app-layout>
 
-    <x-slot name="header">
+    <style>
+        nav {
+            display: none !important;
+        }
 
-        <div class="flex items-center justify-between">
+        header {
+            display: none !important;
+        }
+    </style>
 
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Riwayat Transaksi') }}
-            </h2>
+    {{-- HEADER --}}
+    <div
+        class="border-b"
+        style="
+            background-color: #FFFFFF;
+            border-color: #E2E8F0;
+        "
+    >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
-            <a
-                href="{{ route('transactions.create') }}"
-                style="color: #ffffff !important; background-color: #2563eb !important;"
-                class="px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition"
-            >
-                Tambah Transaksi
-            </a>
+            <div>
+                <p
+                    class="text-xs font-bold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    FACESHIELD
+                </p>
+
+                <h2
+                    class="font-semibold text-xl mt-1"
+                    style="color: #0F1B3D;"
+                >
+                    Riwayat Transaksi
+                </h2>
+            </div>
+
+            <div class="mt-4">
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="inline-flex items-center text-sm font-semibold px-4 py-2 rounded-lg transition"
+                    style="
+                        color: #0F1B3D;
+                        background-color: #F5F7FB;
+                        border: 1px solid #E2E8F0;
+                    "
+                >
+                    ← Kembali ke Dashboard
+                </a>
+            </div>
 
         </div>
+    </div>
 
-    </x-slot>
+    {{-- CONTENT --}}
+    <div
+        class="py-12 min-h-screen"
+        style="
+            background: linear-gradient(
+                180deg,
+                #F5F7FB 0%,
+                #EEF3FA 100%
+            );
+        "
+    >
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
+            {{-- HERO CARD --}}
+            <div
+                class="mb-6 rounded-2xl p-6 shadow-sm"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #0F1B3D 0%,
+                        #1D3B82 100%
+                    );
+                    border-left: 5px solid #D4A72C;
+                "
+            >
+                <p
+                    class="text-xs font-semibold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    FINANCIAL ACTIVITY
+                </p>
 
-    <div class="py-12">
+                <h1
+                    class="text-2xl font-bold mt-2"
+                    style="color: #FFFFFF;"
+                >
+                    Riwayat Transaksi
+                </h1>
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <p
+                    class="text-sm mt-2"
+                    style="color: #CBD5E1;"
+                >
+                    Lihat seluruh aktivitas transaksi keuangan Anda dengan mudah dan aman.
+                </p>
+            </div>
 
             {{-- SUCCESS MESSAGE --}}
             @if (session('success'))
-
-                <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-
-                    <p class="text-sm font-medium text-green-700 dark:text-green-400">
+                <div
+                    class="mb-6 rounded-xl p-4"
+                    style="
+                        background-color: #F0FDF4;
+                        border: 1px solid #BBF7D0;
+                    "
+                >
+                    <p
+                        class="text-sm font-semibold"
+                        style="color: #15803D;"
+                    >
                         {{ session('success') }}
                     </p>
-
                 </div>
-
             @endif
 
+            {{-- TRANSACTION CARD --}}
+            <div
+                class="overflow-hidden shadow-lg sm:rounded-2xl"
+                style="
+                    background-color: #FFFFFF;
+                    border: 1px solid #E2E8F0;
+                "
+            >
+                <div class="p-6 sm:p-8">
 
-            {{-- TRANSAKSI --}}
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-
-                    <div class="flex items-center justify-between">
+                    {{-- TITLE --}}
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 
                         <div>
-
-                            <h3 class="text-lg font-semibold">
-                                Semua Transaksi
+                            <h3
+                                class="text-lg font-bold"
+                                style="color: #0F1B3D;"
+                            >
+                                Daftar Transaksi
                             </h3>
 
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Daftar pendapatan dan pengeluaran akun Anda.
+                            <p
+                                class="text-sm mt-1"
+                                style="color: #64748B;"
+                            >
+                                Riwayat aktivitas keuangan Anda.
                             </p>
-
                         </div>
 
                         <a
-                            href="{{ route('dashboard') }}"
-                            style="color: #2563eb !important;"
-                            class="text-sm font-semibold hover:underline"
+                            href="{{ route('transactions.create') }}"
+                            class="inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-sm font-bold text-white transition"
+                            style="
+                                background: linear-gradient(
+                                    135deg,
+                                    #2563EB 0%,
+                                    #1D4ED8 100%
+                                );
+                            "
                         >
-                            Kembali ke Dashboard
+                            + Tambah Transaksi
                         </a>
 
                     </div>
 
+                    {{-- TRANSACTIONS --}}
+                    @if ($transactions->count() > 0)
 
-                    @if($transactions->count() > 0)
+                        <div class="space-y-4">
 
-                        <div class="mt-6 overflow-x-auto">
+                            @foreach ($transactions as $transaction)
 
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <div
+                                    class="rounded-2xl p-5 transition"
+                                    style="
+                                        background-color: #F8FAFC;
+                                        border: 1px solid #E2E8F0;
+                                    "
+                                >
 
-                                <thead>
+                                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
-                                    <tr>
+                                        {{-- LEFT --}}
+                                        <div class="flex items-start gap-4">
 
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Tanggal
-                                        </th>
+                                            <div
+                                                class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                style="
+                                                    background-color:
+                                                    {{ $transaction->type === 'income' ? '#DCFCE7' : '#FEE2E2' }};
+                                                    color:
+                                                    {{ $transaction->type === 'income' ? '#15803D' : '#DC2626' }};
+                                                "
+                                            >
+                                                {{ $transaction->type === 'income' ? '↓' : '↑' }}
+                                            </div>
 
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Jenis
-                                        </th>
+                                            <div>
 
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Keterangan
-                                        </th>
+                                                <div class="flex flex-wrap items-center gap-2">
 
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Nominal
-                                        </th>
+                                                    <p
+                                                        class="font-bold"
+                                                        style="color: #0F1B3D;"
+                                                    >
+                                                        {{ $transaction->description ?: 'Transaksi' }}
+                                                    </p>
 
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Status
-                                        </th>
+                                                    <span
+                                                        class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                                                        style="
+                                                            background-color:
+                                                            {{ $transaction->type === 'income' ? '#DCFCE7' : '#FEE2E2' }};
+                                                            color:
+                                                            {{ $transaction->type === 'income' ? '#15803D' : '#B91C1C' }};
+                                                        "
+                                                    >
+                                                        {{ $transaction->type === 'income' ? 'Pendapatan' : 'Pengeluaran' }}
+                                                    </span>
 
-                                        <th
-                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase"
-                                        >
-                                            Aksi
-                                        </th>
+                                                </div>
 
-                                    </tr>
-
-                                </thead>
-
-
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-
-                                    @foreach($transactions as $transaction)
-
-                                        <tr>
-
-                                            {{-- TANGGAL --}}
-                                            <td class="px-4 py-4 whitespace-nowrap">
-
-                                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                <div
+                                                    class="text-xs mt-2"
+                                                    style="color: #64748B;"
+                                                >
                                                     {{ $transaction->created_at->format('d M Y') }}
-                                                </p>
-
-                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    •
                                                     {{ $transaction->created_at->format('H:i') }}
+                                                </div>
+
+                                                <div
+                                                    class="text-xs mt-1"
+                                                    style="color: #94A3B8;"
+                                                >
+                                                    Ref: {{ $transaction->reference }}
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        {{-- RIGHT --}}
+                                        <div class="flex items-center justify-between lg:justify-end gap-5">
+
+                                            <div class="text-left lg:text-right">
+
+                                                <p
+                                                    class="text-lg font-bold"
+                                                    style="
+                                                        color:
+                                                        {{ $transaction->type === 'income' ? '#15803D' : '#DC2626' }};
+                                                    "
+                                                >
+                                                    {{ $transaction->type === 'income' ? '+' : '-' }}
+                                                    Rp {{ number_format($transaction->amount, 0, ',', '.') }}
                                                 </p>
 
-                                            </td>
-
-
-                                            {{-- JENIS --}}
-                                            <td class="px-4 py-4 whitespace-nowrap">
-
-                                                @if($transaction->type === 'income')
-
-                                                    <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                                        Pendapatan
-                                                    </span>
-
-                                                @else
-
-                                                    <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                                        Pengeluaran
-                                                    </span>
-
-                                                @endif
-
-                                            </td>
-
-
-                                            {{-- KETERANGAN --}}
-                                            <td class="px-4 py-4">
-
-                                                <p class="text-sm text-gray-900 dark:text-gray-100">
-                                                    {{ $transaction->description ?? 'Tidak ada keterangan' }}
-                                                </p>
-
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $transaction->reference }}
-                                                </p>
-
-                                            </td>
-
-
-                                            {{-- NOMINAL --}}
-                                            <td class="px-4 py-4 whitespace-nowrap">
-
-                                                @if($transaction->type === 'income')
-
-                                                    <span
-                                                        class="font-semibold text-green-600"
-                                                    >
-                                                        + Rp {{ number_format($transaction->amount, 0, ',', '.') }}
-                                                    </span>
-
-                                                @else
-
-                                                    <span
-                                                        class="font-semibold text-red-600"
-                                                    >
-                                                        - Rp {{ number_format($transaction->amount, 0, ',', '.') }}
-                                                    </span>
-
-                                                @endif
-
-                                            </td>
-
-
-                                            {{-- STATUS --}}
-                                            <td class="px-4 py-4 whitespace-nowrap">
-
-                                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                                <span
+                                                    class="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mt-1"
+                                                    style="
+                                                        background-color: #F1F5F9;
+                                                        color: #475569;
+                                                    "
+                                                >
                                                     {{ ucfirst($transaction->status) }}
                                                 </span>
 
-                                            </td>
+                                            </div>
 
+                                            <a
+                                                href="{{ route('transactions.show', $transaction) }}"
+                                                class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold transition"
+                                                style="
+                                                    color: #1D4ED8;
+                                                    background-color: #EFF6FF;
+                                                    border: 1px solid #BFDBFE;
+                                                "
+                                            >
+                                                Detail
+                                            </a>
 
-                                            {{-- AKSI --}}
-                                            <td class="px-4 py-4 whitespace-nowrap text-right">
+                                        </div>
 
-                                                <a
-                                                    href="{{ route('transactions.show', $transaction) }}"
-                                                    style="color: #2563eb !important;"
-                                                    class="text-sm font-semibold hover:underline"
-                                                >
-                                                    Detail
-                                                </a>
+                                    </div>
 
-                                            </td>
+                                </div>
 
-                                        </tr>
-
-                                    @endforeach
-
-                                </tbody>
-
-                            </table>
+                            @endforeach
 
                         </div>
 
                     @else
 
-                        <div class="mt-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                        {{-- EMPTY STATE --}}
+                        <div
+                            class="text-center py-12 rounded-2xl"
+                            style="
+                                background-color: #F8FAFC;
+                                border: 1px dashed #CBD5E1;
+                            "
+                        >
 
-                            <p class="text-gray-500 dark:text-gray-400">
-                                Belum ada transaksi.
-                            </p>
-
-                            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                                Tambahkan pendapatan atau pengeluaran untuk melihat riwayat transaksi.
-                            </p>
-
-                            <div class="mt-4">
-
-                                <a
-                                    href="{{ route('transactions.create') }}"
-                                    style="color: #ffffff !important; background-color: #2563eb !important;"
-                                    class="inline-block px-5 py-2.5 rounded-lg font-semibold hover:opacity-90 transition"
-                                >
-                                    Tambah Transaksi
-                                </a>
-
+                            <div
+                                class="w-14 h-14 mx-auto rounded-full flex items-center justify-center text-2xl mb-4"
+                                style="
+                                    background-color: #EFF6FF;
+                                    color: #2563EB;
+                                "
+                            >
+                                ₿
                             </div>
+
+                            <h3
+                                class="text-lg font-bold"
+                                style="color: #0F1B3D;"
+                            >
+                                Belum Ada Transaksi
+                            </h3>
+
+                            <p
+                                class="text-sm mt-2 mb-5"
+                                style="color: #64748B;"
+                            >
+                                Belum ada aktivitas transaksi yang tercatat.
+                            </p>
+
+                            <a
+                                href="{{ route('transactions.create') }}"
+                                class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                                style="
+                                    background: linear-gradient(
+                                        135deg,
+                                        #2563EB 0%,
+                                        #1D4ED8 100%
+                                    );
+                                "
+                            >
+                                + Tambah Transaksi
+                            </a>
 
                         </div>
 
                     @endif
 
                 </div>
+            </div>
 
+            {{-- FOOTER --}}
+            <div class="text-center mt-6">
+                <p
+                    class="text-xs"
+                    style="color: #94A3B8;"
+                >
+                    🛡 Dilindungi oleh keamanan FaceShield
+                    <span style="color: #CBD5E1;">•</span>
+                    Digital Banking Security
+                </p>
             </div>
 
         </div>
-
     </div>
 
 </x-app-layout>

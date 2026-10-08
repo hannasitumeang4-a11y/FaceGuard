@@ -1,56 +1,195 @@
 <x-app-layout>
 
-    <x-slot name="header">
+    <style>
+        /* Sembunyikan navbar/header bawaan Laravel hanya di halaman ini */
+        body > div > nav,
+        nav.flex,
+        nav.bg-white,
+        nav.border-b,
+        header {
+            display: none !important;
+        }
+    </style>
 
-        <div class="flex items-center justify-between">
 
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Tambah Transaksi') }}
-            </h2>
+    {{-- HEADER FACESHIELD --}}
+    <div
+        class="border-b"
+        style="
+            background-color: #FFFFFF;
+            border-color: #E2E8F0;
+        "
+    >
 
-            <a
-                href="{{ route('dashboard') }}"
-                style="color: #4b5563 !important;"
-                class="text-sm font-semibold hover:underline"
-            >
-                Kembali ke Dashboard
-            </a>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+
+            <div>
+
+                <p
+                    class="text-xs font-bold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    FACESHIELD
+                </p>
+
+                <h2
+                    class="font-semibold text-xl mt-1"
+                    style="color: #0F1B3D;"
+                >
+                    Tambah Transaksi
+                </h2>
+
+            </div>
+
+            <div class="mt-4">
+
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="inline-flex items-center text-sm font-semibold px-4 py-2 rounded-lg transition"
+                    style="
+                        color: #0F1B3D;
+                        background-color: #F5F7FB;
+                        border: 1px solid #E2E8F0;
+                    "
+                >
+                    ← Kembali ke Dashboard
+                </a>
+
+            </div>
 
         </div>
 
-    </x-slot>
+    </div>
 
 
-    <div class="py-12">
+    <div
+        class="py-12 min-h-screen"
+        style="
+            background: linear-gradient(180deg, #F5F7FB 0%, #EEF3FA 100%);
+        "
+    >
 
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            {{-- HEADER CARD --}}
+            <div
+                class="mb-6 rounded-2xl p-6 shadow-sm"
+                style="
+                    background: linear-gradient(135deg, #0F1B3D 0%, #1D3B82 100%);
+                    border-left: 5px solid #D4A72C;
+                "
+            >
 
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+                <p
+                    class="text-xs font-semibold tracking-widest uppercase"
+                    style="color: #D4A72C;"
+                >
+                    FINANCIAL ACTIVITY
+                </p>
 
-                    <div class="mb-6">
+                <h1
+                    class="text-2xl font-bold mt-2"
+                    style="color: #FFFFFF;"
+                >
+                    Tambah Transaksi
+                </h1>
 
-                        <h3 class="text-lg font-semibold">
-                            Tambah Pendapatan / Pengeluaran
-                        </h3>
+                <p
+                    class="text-sm mt-2"
+                    style="color: #CBD5E1;"
+                >
+                    Catat pendapatan atau pengeluaran dengan mudah dan aman.
+                </p>
 
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Masukkan informasi transaksi yang ingin dicatat.
-                        </p>
+            </div>
+
+
+            {{-- FORM CARD --}}
+            <div
+                class="overflow-hidden shadow-lg sm:rounded-2xl"
+                style="
+                    background-color: #FFFFFF;
+                    border: 1px solid #E2E8F0;
+                "
+            >
+
+                <div
+                    class="p-6 sm:p-8"
+                    style="color: #0F1B3D;"
+                >
+
+                    {{-- JUDUL FORM --}}
+                    <div
+                        class="mb-7 pb-5"
+                        style="border-bottom: 1px solid #E8EDF5;"
+                    >
+
+                        <div class="flex items-center gap-4">
+
+                            <div
+                                class="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style="
+                                    background-color: #FFF7E0;
+                                    color: #D4A72C;
+                                "
+                            >
+
+                                <svg
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="1.8"
+                                        d="M12 5v14m7-7H5"
+                                    />
+                                </svg>
+
+                            </div>
+
+                            <div>
+
+                                <h3
+                                    class="text-lg font-bold"
+                                    style="color: #0F1B3D;"
+                                >
+                                    Catat Transaksi
+                                </h3>
+
+                                <p
+                                    class="text-sm mt-1"
+                                    style="color: #64748B;"
+                                >
+                                    Masukkan informasi transaksi yang ingin dicatat.
+                                </p>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
 
+                    {{-- ERROR --}}
                     @if ($errors->any())
 
-                        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div
+                            class="mb-6 p-4 rounded-xl"
+                            style="
+                                background-color: #FEF2F2;
+                                border: 1px solid #FECACA;
+                                color: #B91C1C;
+                            "
+                        >
 
-                            <p class="font-semibold text-red-700 dark:text-red-400">
+                            <p class="font-semibold text-sm mb-2">
                                 Terdapat kesalahan:
                             </p>
 
-                            <ul class="mt-2 list-disc list-inside text-sm text-red-600 dark:text-red-400">
+                            <ul class="list-disc list-inside text-sm">
 
                                 @foreach ($errors->all() as $error)
 
@@ -67,12 +206,20 @@
                     @endif
 
 
+                    {{-- SUCCESS --}}
                     @if (session('success'))
 
-                        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <div
+                            class="mb-6 p-4 rounded-xl"
+                            style="
+                                background-color: #F0FDF4;
+                                border: 1px solid #BBF7D0;
+                                color: #15803D;
+                            "
+                        >
 
-                            <p class="text-sm font-medium text-green-700 dark:text-green-400">
-                                {{ session('success') }}
+                            <p class="font-semibold text-sm">
+                                ✓ {{ session('success') }}
                             </p>
 
                         </div>
@@ -93,7 +240,8 @@
 
                             <label
                                 for="type"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="block font-semibold text-sm mb-2"
+                                style="color: #0F1B3D;"
                             >
                                 Jenis Transaksi
                             </label>
@@ -102,7 +250,12 @@
                                 name="type"
                                 id="type"
                                 required
-                                class="mt-2 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full rounded-lg"
+                                style="
+                                    border: 1px solid #CBD5E1;
+                                    background-color: #FFFFFF;
+                                    color: #0F1B3D;
+                                "
                             >
 
                                 <option value="">
@@ -133,15 +286,17 @@
 
                             <label
                                 for="amount"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="block font-semibold text-sm mb-2"
+                                style="color: #0F1B3D;"
                             >
-                                Nominal
+                                Nominal Transaksi
                             </label>
 
-                            <div class="mt-2 relative">
+                            <div class="relative">
 
                                 <span
-                                    class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 dark:text-gray-400"
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
+                                    style="color: #64748B;"
                                 >
                                     Rp
                                 </span>
@@ -154,15 +309,16 @@
                                     min="1"
                                     step="1"
                                     required
-                                    placeholder="0"
-                                    class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-12 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    class="w-full rounded-lg pl-12"
+                                    style="
+                                        border: 1px solid #CBD5E1;
+                                        background-color: #FFFFFF;
+                                        color: #0F1B3D;
+                                    "
+                                    placeholder="Masukkan nominal"
                                 >
 
                             </div>
-
-                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                Masukkan nominal tanpa tanda titik atau koma.
-                            </p>
 
                         </div>
 
@@ -172,7 +328,8 @@
 
                             <label
                                 for="description"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="block font-semibold text-sm mb-2"
+                                style="color: #0F1B3D;"
                             >
                                 Keterangan
                             </label>
@@ -180,60 +337,129 @@
                             <textarea
                                 name="description"
                                 id="description"
-                                rows="4"
+                                rows="3"
                                 maxlength="1000"
-                                placeholder="Contoh: Gaji, belanja, pembayaran listrik, dan sebagainya."
-                                class="mt-2 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                class="w-full rounded-lg"
+                                style="
+                                    border: 1px solid #CBD5E1;
+                                    background-color: #FFFFFF;
+                                    color: #0F1B3D;
+                                "
+                                placeholder="Keterangan (opsional)"
                             >{{ old('description') }}</textarea>
 
-                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                Keterangan bersifat opsional.
-                            </p>
+                        </div>
+
+
+                        {{-- INFORMASI --}}
+                        <div
+                            class="mb-7 rounded-xl p-4"
+                            style="
+                                background-color: #FFF9E8;
+                                border: 1px solid #F4E2A8;
+                            "
+                        >
+
+                            <div class="flex items-start gap-3">
+
+                                <div
+                                    class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style="
+                                        background-color: #FFF0B8;
+                                        color: #B88900;
+                                    "
+                                >
+
+                                    <svg
+                                        class="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M12 9v4m0 4h.01M10.3 3h3.4L21 19H3L10.3 3Z"
+                                        />
+
+                                    </svg>
+
+                                </div>
+
+                                <div>
+
+                                    <p
+                                        class="text-sm font-semibold"
+                                        style="color: #0F1B3D;"
+                                    >
+                                        Periksa Transaksi
+                                    </p>
+
+                                    <p
+                                        class="text-xs mt-1 leading-5"
+                                        style="color: #64748B;"
+                                    >
+                                        Pastikan jenis transaksi, nominal,
+                                        dan keterangan sudah sesuai
+                                        sebelum menyimpan transaksi.
+                                    </p>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
 
-                        {{-- INFORMASI KEAMANAN --}}
-                        <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-
-                            <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">
-                                Informasi Keamanan
-                            </p>
-
-                            <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">
-                                Transaksi akan dicatat sebagai aktivitas akun
-                                {{ auth()->user()->name }}.
-                            </p>
-
-                        </div>
-
-
-                        {{-- TOMBOL --}}
-                        <div class="flex items-center justify-end gap-3">
-
-                            <a
-                                href="{{ route('dashboard') }}"
-                                style="color: #374151 !important; background-color: #e5e7eb !important;"
-                                class="inline-block px-5 py-2.5 rounded-lg font-semibold hover:opacity-80 transition"
-                            >
-                                Batal
-                            </a>
-
+                        {{-- BUTTON --}}
+                        <div class="flex gap-3">
 
                             <button
                                 type="submit"
-                                style="color: #ffffff !important; background-color: #2563eb !important; border: none !important; cursor: pointer !important;"
-                                class="inline-block px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition"
+                                class="px-6 py-3 font-semibold rounded-lg transition shadow-sm"
+                                style="
+                                    color: #FFFFFF;
+                                    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+                                    border: none;
+                                "
                             >
                                 Simpan Transaksi
                             </button>
 
-                        </div>
+                            <a
+                                href="{{ route('dashboard') }}"
+                                class="px-6 py-3 font-semibold rounded-lg transition"
+                                style="
+                                    color: #475569;
+                                    background-color: #F1F5F9;
+                                    border: 1px solid #E2E8F0;
+                                "
+                            >
+                                Kembali
+                            </a>
 
+                        </div>
 
                     </form>
 
                 </div>
+
+            </div>
+
+
+            {{-- FOOTER --}}
+            <div class="text-center mt-6">
+
+                <p
+                    class="text-xs"
+                    style="color: #94A3B8;"
+                >
+                    🛡 Dilindungi oleh keamanan FaceShield
+                    <span style="color: #CBD5E1;">•</span>
+                    Digital Banking Security
+                </p>
 
             </div>
 

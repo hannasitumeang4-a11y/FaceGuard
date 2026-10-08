@@ -6,7 +6,6 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -58,64 +57,6 @@ Route::middleware('guest')->group(function () {
         'login',
         [AuthenticatedSessionController::class, 'store']
     );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORGOT PASSWORD
-    |--------------------------------------------------------------------------
-    |
-    | Password recovery menggunakan pertanyaan keamanan.
-    |
-    */
-
-    Route::get(
-        'forgot-password',
-        [ForgotPasswordController::class, 'showEmailForm']
-    )->name('password.request');
-
-    Route::post(
-        'forgot-password',
-        [ForgotPasswordController::class, 'checkEmail']
-    )->name('password.recovery.email');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RECOVERY QUESTIONS
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        'forgot-password/questions',
-        [ForgotPasswordController::class, 'showQuestions']
-    )->name('password.recovery.questions');
-
-    Route::post(
-        'forgot-password/questions',
-        [ForgotPasswordController::class, 'verifyQuestions']
-    )->name('password.recovery.verify');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESET PASSWORD
-    |--------------------------------------------------------------------------
-    |
-    | Form password baru setelah semua pertanyaan keamanan
-    | berhasil diverifikasi.
-    |
-    */
-
-    Route::get(
-        'forgot-password/reset',
-        [ForgotPasswordController::class, 'showResetForm']
-    )->name('password.recovery.reset');
-
-    Route::post(
-        'forgot-password/reset',
-        [ForgotPasswordController::class, 'resetPassword']
-    )->name('password.recovery.reset.store');
 });
 
 
