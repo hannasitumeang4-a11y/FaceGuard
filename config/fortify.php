@@ -80,9 +80,15 @@ return [
     |--------------------------------------------------------------------------
     | Register View Routes
     |--------------------------------------------------------------------------
+    |
+    | DIUBAH: true -> false
+    | Halaman login & register sudah kamu buat sendiri di routes/auth.php,
+    | jadi Fortify tidak perlu membuat route view-nya (menghindari bentrok
+    | route GET /login dan GET /register).
+    |
     */
 
-    'views' => true,
+    'views' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -107,11 +113,17 @@ return [
     |--------------------------------------------------------------------------
     | Features
     |--------------------------------------------------------------------------
+    |
+    | DIUBAH: Features::registration() dinonaktifkan karena registrasi
+    | sudah ditangani routes/auth.php (RegisteredUserController).
+    | Features::resetPasswords() memang tidak aktif, dan harus tetap
+    | begitu karena reset password memakai ForgotPasswordController.
+    |
     */
 
     'features' => [
 
-        Features::registration(),
+        // Features::registration(),
 
         Features::updateProfileInformation(),
 

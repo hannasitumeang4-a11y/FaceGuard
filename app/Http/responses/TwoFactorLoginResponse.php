@@ -15,8 +15,20 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
 
         /*
         |--------------------------------------------------------------------------
+        | PASTIKAN USER DITEMUKAN
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | OTP BERHASIL
         |--------------------------------------------------------------------------
+        | Session ini menandakan bahwa pengguna telah melewati
+        | proses verifikasi OTP pada login saat ini.
         */
 
         session([
@@ -25,46 +37,40 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
 
         /*
         |--------------------------------------------------------------------------
-        | RESET FACE VERIFICATION
+        | RESET STATUS VERIFIKASI WAJAH SEBELUMNYA
         |--------------------------------------------------------------------------
-        |
-        | Setiap login baru harus melakukan verifikasi wajah lagi.
-        |
+        | Login baru harus melakukan verifikasi wajah kembali.
         */
 
         session()->forget([
             'face_verified',
             'face_verified_at',
+            'transaction_face_verified',
+            'transaction_face_verified_at',
+            'face_verification_redirect',
+            'face_liveness_challenge',
+            'face_liveness_type',
+            'face_liveness_challenge_created_at',
         ]);
 
         /*
         |--------------------------------------------------------------------------
         | BELUM ADA FACE PROFILE
         |--------------------------------------------------------------------------
-        |
-        | User sudah lolos OTP tetapi belum pernah mendaftarkan
-        | wajahnya.
-        |
+        | Pengguna diarahkan untuk mendaftarkan wajah.
         */
 
-        if (!$user || !$user->faceProfile) {
-
-            return redirect()->route(
-                'face.registration'
-            );
+        if (!$user->faceProfile) {
+            return redirect()->route('face.registration');
         }
 
         /*
         |--------------------------------------------------------------------------
         | SUDAH ADA FACE PROFILE
         |--------------------------------------------------------------------------
-        |
-        | User tinggal melakukan face verification.
-        |
+        | Pengguna melakukan verifikasi wajah sebelum masuk dashboard.
         */
 
-        return redirect()->route(
-            'face.verification'
-        );
+        return redirect()->route('face.verification');
     }
 }

@@ -6,25 +6,15 @@
         </h2>
 
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Jawaban keamanan berhasil diverifikasi.
-            Silakan buat password baru untuk akun kamu.
+            Verifikasi berhasil. Silakan masukkan password baru Anda.
         </p>
     </div>
-
-    @if ($errors->any())
-        <div class="mb-4 rounded-md bg-red-100 p-4 text-sm text-red-700">
-            {{ $errors->first() }}
-        </div>
-    @endif
 
     <form method="POST" action="{{ route('password.recovery.reset.store') }}">
         @csrf
 
         <div>
-            <x-input-label
-                for="password"
-                :value="__('Password Baru')"
-            />
+            <x-input-label for="password" value="Password Baru" />
 
             <x-text-input
                 id="password"
@@ -43,10 +33,7 @@
         </div>
 
         <div class="mt-4">
-            <x-input-label
-                for="password_confirmation"
-                :value="__('Konfirmasi Password Baru')"
-            />
+            <x-input-label for="password_confirmation" value="Konfirmasi Password" />
 
             <x-text-input
                 id="password_confirmation"
@@ -56,19 +43,12 @@
                 required
                 autocomplete="new-password"
             />
-
-            <x-input-error
-                :messages="$errors->get('password_confirmation')"
-                class="mt-2"
-            />
         </div>
 
         <div class="flex items-center justify-end mt-6">
-
             <x-primary-button>
-                Simpan Password Baru
+                Simpan Password
             </x-primary-button>
-
         </div>
 
     </form>

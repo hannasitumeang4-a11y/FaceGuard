@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
+use Illuminate\Validation\Rule;   // BARU
 use Illuminate\Validation\Rules;
 
 class CreateNewUser implements CreatesNewUsers
@@ -38,10 +39,11 @@ class CreateNewUser implements CreatesNewUsers
                 Rules\Password::defaults(),
             ],
 
+            // DIUBAH: pertanyaan harus dipilih dari daftar & tidak boleh sama
             'recovery_question_1' => [
                 'required',
                 'string',
-                'max:255',
+                Rule::in(User::RECOVERY_QUESTIONS),
             ],
 
             'recovery_answer_1' => [
@@ -53,7 +55,8 @@ class CreateNewUser implements CreatesNewUsers
             'recovery_question_2' => [
                 'required',
                 'string',
-                'max:255',
+                Rule::in(User::RECOVERY_QUESTIONS),
+                'different:recovery_question_1',
             ],
 
             'recovery_answer_2' => [
@@ -65,7 +68,9 @@ class CreateNewUser implements CreatesNewUsers
             'recovery_question_3' => [
                 'required',
                 'string',
-                'max:255',
+                Rule::in(User::RECOVERY_QUESTIONS),
+                'different:recovery_question_1',
+                'different:recovery_question_2',
             ],
 
             'recovery_answer_3' => [

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Fortify\CreateNewUser;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -27,41 +26,16 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, CreateNewUser $creator): RedirectResponse
     {
-        $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        /*
+        |--------------------------------------------------------------------------
+        | Normalisasi email
+        |--------------------------------------------------------------------------
+        */
 
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                'unique:' . User::class,
-            ],
-
-            'password' => [
-                'required',
-                'confirmed',
-                Rules\Password::defaults(),
-            ],
-
-            'security_question' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'security_answer' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        $request->merge([
+            'email' => strtolower(trim((string) $request->email)),
         ]);
 
         /*
@@ -69,22 +43,28 @@ class RegisteredUserController extends Controller
         | Buat user baru
         |--------------------------------------------------------------------------
         |
-        | Semua akun yang melakukan registrasi
-        | otomatis menjadi USER.
+        | Validasi & penyimpanan (termasuk 3 pertanyaan pemulihan
+        | yang jawabannya di-hash) ditangani CreateNewUser.
         |
+        | Semua akun yang melakukan registrasi otomatis menjadi USER.
         | Admin tidak dibuat melalui halaman registrasi.
-        | Admin kita atur melalui Tinker.
         |
         */
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => strtolower($request->email),
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-            'security_question' => $request->security_question,
-            'security_answer' => Hash::make($request->security_answer),
-        ]);
+        $user = $creator->create(
+            $request->only([
+                'name',
+                'email',
+                'password',
+                'password_confirmation',
+                'recovery_question_1',
+                'recovery_answer_1',
+                'recovery_question_2',
+                'recovery_answer_2',
+                'recovery_question_3',
+                'recovery_answer_3',
+            ])
+        );
 
         event(new Registered($user));
 
@@ -93,16 +73,26 @@ class RegisteredUserController extends Controller
         | Setelah registrasi
         |--------------------------------------------------------------------------
         |
-        | JANGAN login otomatis.
-        | Arahkan user ke halaman LOGIN.
+        | User di-login HANYA agar bisa mengakses halaman setup MFA.
+        | Dashboard & fitur transaksi tetap terkunci sampai:
+        |
+        | QR Authenticator + OTP terkonfirmasi
+        |   ↓
+        | Registrasi wajah
+        |   ↓
+        | Verifikasi wajah
         |
         */
 
+        Auth::login($user);
+
+        $request->session()->regenerate();
+
         return redirect()
-            ->route('login')
+            ->route('mfa.setup')
             ->with(
                 'status',
-                'Registrasi berhasil. Silakan login untuk melanjutkan.'
+                'Registrasi berhasil. Pindai QR code dengan aplikasi authenticator, lalu masukkan kode OTP.'
             );
     }
 }

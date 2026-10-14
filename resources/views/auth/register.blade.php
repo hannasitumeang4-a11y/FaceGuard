@@ -501,139 +501,77 @@
                         </div>
 
 
-                        {{-- Security Question --}}
-                        <div class="mt-4">
+                        {{-- DIUBAH: Pertanyaan Keamanan 1-3 (pilih dari dropdown) --}}
+                        @foreach ([1, 2, 3] as $i)
 
-                            <label
-                                for="security_question"
-                                class="block text-sm font-semibold text-slate-700"
-                            >
-                                Pertanyaan Keamanan
-                            </label>
+                            <div class="mt-4">
 
-                            <div class="relative mt-2">
+                                <label
+                                    for="recovery_question_{{ $i }}"
+                                    class="block text-sm font-semibold text-slate-700"
+                                >
+                                    Pertanyaan Keamanan {{ $i }}
+                                </label>
 
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                <select
+                                    id="recovery_question_{{ $i }}"
+                                    name="recovery_question_{{ $i }}"
+                                    required
+                                    class="mt-2 w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                >
 
-                                    <svg
-                                        class="w-5 h-5 text-slate-400"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
+                                    <option
+                                        value=""
+                                        disabled
+                                        {{ old("recovery_question_$i") ? '' : 'selected' }}
                                     >
+                                        Pilih pertanyaan
+                                    </option>
 
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="1.7"
-                                            d="M8 10h8M8 14h5"
-                                        />
+                                    @foreach (\App\Models\User::RECOVERY_QUESTIONS as $question)
 
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="1.7"
-                                            d="M5 4h14a2 2 0 012 2v9a2 2 0 01-2 2h-7l-4 4v-4H5a2 2 0 01-2-2V6a2 2 0 012-2z"
-                                        />
+                                        <option
+                                            value="{{ $question }}"
+                                            {{ old("recovery_question_$i") === $question ? 'selected' : '' }}
+                                        >
+                                            {{ $question }}
+                                        </option>
 
-                                    </svg>
+                                    @endforeach
 
-                                </div>
+                                </select>
+
+                                @error("recovery_question_$i")
+
+                                    <p class="mt-2 text-sm text-red-500">
+                                        {{ $message }}
+                                    </p>
+
+                                @enderror
 
 
                                 <input
-                                    id="security_question"
+                                    id="recovery_answer_{{ $i }}"
                                     type="text"
-                                    name="security_question"
-                                    value="{{ old('security_question') }}"
+                                    name="recovery_answer_{{ $i }}"
+                                    value="{{ old("recovery_answer_$i") }}"
                                     required
-                                    placeholder="Contoh: Siapa nama hewan peliharaan saya?"
-                                    class="w-full h-12 pl-12 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    autocomplete="off"
+                                    placeholder="Jawaban Anda"
+                                    class="mt-2 w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 >
+
+                                @error("recovery_answer_$i")
+
+                                    <p class="mt-2 text-sm text-red-500">
+                                        {{ $message }}
+                                    </p>
+
+                                @enderror
 
                             </div>
 
-
-                            @if ($errors->get('security_question'))
-
-                                <p class="mt-2 text-sm text-red-500">
-                                    {{ $errors->first('security_question') }}
-                                </p>
-
-                            @endif
-
-                        </div>
-
-
-                        {{-- Security Answer --}}
-                        <div class="mt-4">
-
-                            <label
-                                for="security_answer"
-                                class="block text-sm font-semibold text-slate-700"
-                            >
-                                Jawaban Keamanan
-                            </label>
-
-                            <div class="relative mt-2">
-
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-
-                                    <svg
-                                        class="w-5 h-5 text-slate-400"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-
-                                        <circle
-                                            cx="12"
-                                            cy="12"
-                                            r="8"
-                                            stroke-width="1.7"
-                                        />
-
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-width="1.7"
-                                            d="M9.5 9.5a2.5 2.5 0 115 0c0 1.8-2.5 2-2.5 3.5"
-                                        />
-
-                                        <circle
-                                            cx="12"
-                                            cy="16"
-                                            r=".7"
-                                            fill="currentColor"
-                                            stroke="none"
-                                        />
-
-                                    </svg>
-
-                                </div>
-
-
-                                <input
-                                    id="security_answer"
-                                    type="text"
-                                    name="security_answer"
-                                    value="{{ old('security_answer') }}"
-                                    required
-                                    placeholder="Masukkan jawaban Anda"
-                                    class="w-full h-12 pl-12 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                >
-
-                            </div>
-
-
-                            @if ($errors->get('security_answer'))
-
-                                <p class="mt-2 text-sm text-red-500">
-                                    {{ $errors->first('security_answer') }}
-                                </p>
-
-                            @endif
-
-                        </div>
+                        @endforeach
 
 
                         {{-- Register Button --}}

@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
@@ -8,17 +9,12 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 
 use Illuminate\Support\Facades\Route;
-
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
-
 
 /*
 |--------------------------------------------------------------------------
 | Guest Routes
 |--------------------------------------------------------------------------
-|
-| Route yang hanya dapat diakses oleh user yang belum login.
-|
 */
 
 Route::middleware('guest')->group(function () {
@@ -29,34 +25,45 @@ Route::middleware('guest')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get(
-        'register',
-        [RegisteredUserController::class, 'create']
-    )->name('register');
+    Route::get('register', [
+        RegisteredUserController::class,
+        'create',
+    ])->name('register');
 
-    Route::post(
-        'register',
-        [RegisteredUserController::class, 'store']
-    );
-
+    Route::post('register', [
+        RegisteredUserController::class,
+        'store',
+    ]);
 
     /*
     |--------------------------------------------------------------------------
     | LOGIN
     |--------------------------------------------------------------------------
-    |
-    | Login tetap menggunakan Fortify agar MFA/OTP bekerja.
-    |
     */
 
     Route::get('login', function () {
         return view('auth.login');
     })->name('login');
 
-    Route::post(
-        'login',
-        [AuthenticatedSessionController::class, 'store']
-    );
+    Route::post('login', [
+        AuthenticatedSessionController::class,
+        'store',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | TWO-FACTOR CHALLENGE VIEW
+    |--------------------------------------------------------------------------
+    |
+    | Route GET ini diperlukan untuk menampilkan halaman OTP.
+    | Route POST untuk memproses OTP sudah disediakan Fortify
+    | dengan nama two-factor.login.store.
+    |
+    */
+
+    Route::get('two-factor-challenge', function () {
+        return view('auth.two-factor-challenge');
+    })->name('two-factor.login');
 });
 
 
@@ -72,10 +79,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | EMAIL VERIFICATION
     |--------------------------------------------------------------------------
-    |
-    | Bagian ini dibiarkan karena merupakan struktur autentikasi
-    | yang sudah ada pada project.
-    |
     */
 
     Route::get(

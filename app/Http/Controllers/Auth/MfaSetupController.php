@@ -15,78 +15,34 @@ class MfaSetupController extends Controller
     {
         $user = $request->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | CEK LOGIN
-        |--------------------------------------------------------------------------
-        */
-
+        // Pengguna wajib login.
         if (!$user) {
             return redirect()->route('login');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | MFA SUDAH AKTIF
-        |--------------------------------------------------------------------------
-        |
-        | Kalau MFA sudah aktif, jangan membuat QR baru.
-        |
-        | Selanjutnya:
-        |
-        | Belum punya wajah
-        |       ↓
-        | Face Registration
-        |
-        | Sudah punya wajah
-        |       ↓
-        | Face Verification
-        |
-        */
-
-        if ($user->hasEnabledTwoFactorAuthentication()) {
-
+        // MFA sudah dikonfirmasi.
+        // Jangan membuat QR baru.
+        if (!is_null($user->two_factor_confirmed_at)) {
             if (!$user->faceProfile) {
-
-                return redirect()->route(
-                    'face.registration'
-                );
+                return redirect()->route('face.registration');
             }
 
-            return redirect()->route(
-                'face.verification'
-            );
+            return redirect()->route('face.verification');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE MFA SECRET
-        |--------------------------------------------------------------------------
-        |
-        | Kalau belum mempunyai secret, generate MFA.
-        |
-        */
-
+        // Buat secret MFA hanya jika belum ada.
+        // Jika secret sudah ada tetapi belum dikonfirmasi,
+        // pertahankan secret tersebut untuk proses setup.
         if (empty($user->two_factor_secret)) {
-
-            app(
-                EnableTwoFactorAuthentication::class
-            )($user);
+            app(EnableTwoFactorAuthentication::class)($user);
 
             $user->refresh();
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | TAMPILKAN QR CODE
-        |--------------------------------------------------------------------------
-        */
-
-        return view(
-            'auth.mfa-setup',
-            [
-                'user' => $user,
-            ]
-        );
+        // Tampilkan halaman setup untuk memindai QR
+        // dan menyelesaikan konfirmasi MFA.
+        return view('auth.mfa-setup', [
+            'user' => $user,
+        ]);
     }
 }

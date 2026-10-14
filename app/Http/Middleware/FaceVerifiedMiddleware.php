@@ -12,57 +12,34 @@ class FaceVerifiedMiddleware
         Request $request,
         Closure $next
     ): Response {
+        // Halaman autentikasi wajah dan setup MFA
+        // tidak boleh diarahkan kembali oleh middleware ini.
+        if ($request->routeIs(
+            'mfa.setup',
+            'face.registration',
+            'face.verification'
+        )) {
+            return $next($request);
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | HARUS LOGIN
-        |--------------------------------------------------------------------------
-        */
-
+        // Pengguna wajib login.
         if (!auth()->check()) {
             return redirect()->route('login');
         }
 
-        $user = auth()->user();
+        $user = $request->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | FACE SUDAH DIVERIFIKASI
-        |--------------------------------------------------------------------------
-        |
-        | Kalau pada sesi login sekarang wajah sudah diverifikasi,
-        | izinkan user masuk ke halaman yang dilindungi.
-        |
-        */
-
+        // Wajah sudah diverifikasi pada sesi login ini.
         if (session('face_verified') === true) {
             return $next($request);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | BELUM ADA FACE PROFILE
-        |--------------------------------------------------------------------------
-        |
-        | User belum mempunyai data wajah.
-        | Arahkan ke registrasi wajah.
-        |
-        */
-
+        // Belum mempunyai profil wajah.
         if (!$user->faceProfile) {
             return redirect()->route('face.registration');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | SUDAH ADA FACE PROFILE
-        |--------------------------------------------------------------------------
-        |
-        | User sudah mempunyai wajah, tetapi belum melakukan
-        | verifikasi wajah pada sesi login sekarang.
-        |
-        */
-
+        // Profil wajah tersedia, tetapi sesi ini belum diverifikasi.
         return redirect()->route('face.verification');
     }
 }
