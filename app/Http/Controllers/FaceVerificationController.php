@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FaceVerification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 
 class FaceVerificationController extends Controller
@@ -167,10 +168,20 @@ class FaceVerificationController extends Controller
                 'boolean',
             ],
 
+            'liveness_mode' => [
+                'nullable',
+                'in:active,passive',
+            ],
+
             'liveness_sequence' => [
-                'required',
+                'nullable',
                 'array',
                 'size:3',
+            ],
+
+            'spoof_suspected' => [
+                'nullable',
+                'boolean',
             ],
         ]);
 
@@ -256,6 +267,83 @@ class FaceVerificationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | MODE LIVENESS & ANTI SPOOF
+        |--------------------------------------------------------------------------
+        |
+        | Mode pasif (tanpa challenge) hanya untuk transaksi.
+        | Jika client melaporkan kemungkinan foto/layar, verifikasi
+        | dibatalkan dan kejadiannya dicatat.
+        |
+        */
+
+        $livenessMode =
+            $request->input(
+                'liveness_mode',
+                'active'
+            );
+
+
+        if (
+            $livenessMode === 'passive' &&
+            $verificationType !== 'transaction'
+        ) {
+
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Mode verifikasi tidak valid.',
+            ], 422);
+        }
+
+
+        if ($request->boolean('spoof_suspected')) {
+
+            FaceVerification::create([
+                'user_id' =>
+                    $user->id,
+
+                'face_profile_id' =>
+                    $user->faceProfile->id,
+
+                'verification_type' =>
+                    $verificationType,
+
+                'liveness_passed' =>
+                    false,
+
+                'face_matched' =>
+                    false,
+
+                'distance' =>
+                    null,
+
+                'status' =>
+                    'spoof_suspected',
+
+                'verified_at' =>
+                    now(),
+            ]);
+
+            Log::warning(
+                'Kemungkinan spoofing (foto/layar) pada verifikasi wajah.',
+                [
+                    'user_id' => $user->id,
+                    'type' => $verificationType,
+                    'ip' => $request->ip(),
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'spoof_suspected' => true,
+                'message' =>
+                    'Terdeteksi kemungkinan foto atau layar. Verifikasi dibatalkan dan kejadian ini dicatat.',
+            ], 422);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | CEK LIVENESS
         |--------------------------------------------------------------------------
         */
@@ -303,81 +391,85 @@ class FaceVerificationController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $sessionChallenge =
-            session(
-                'face_liveness_challenge'
-            );
+        if ($livenessMode === 'active') {
+
+            $sessionChallenge =
+                session(
+                    'face_liveness_challenge'
+                );
 
 
-        $submittedChallenge =
-            $request->input(
-                'liveness_sequence'
-            );
+            $submittedChallenge =
+                $request->input(
+                    'liveness_sequence'
+                );
 
 
-        if (
-            !is_array($sessionChallenge) ||
-            count($sessionChallenge) !== 3
-        ) {
+            if (
+                !is_array($sessionChallenge) ||
+                count($sessionChallenge) !== 3
+            ) {
 
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Liveness challenge tidak ditemukan. Silakan ulangi.',
-            ], 422);
-        }
-
-
-        if (
-            !is_array($submittedChallenge) ||
-            count($submittedChallenge) !== 3
-        ) {
-
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Urutan liveness tidak valid.',
-            ], 422);
-        }
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Liveness challenge tidak ditemukan. Silakan ulangi.',
+                ], 422);
+            }
 
 
-        if (
-            $submittedChallenge !==
-            $sessionChallenge
-        ) {
+            if (
+                !is_array($submittedChallenge) ||
+                count($submittedChallenge) !== 3
+            ) {
 
-            FaceVerification::create([
-                'user_id' =>
-                    $user->id,
-
-                'face_profile_id' =>
-                    $user->faceProfile->id,
-
-                'verification_type' =>
-                    $verificationType,
-
-                'liveness_passed' =>
-                    false,
-
-                'face_matched' =>
-                    false,
-
-                'distance' =>
-                    null,
-
-                'status' =>
-                    'failed',
-
-                'verified_at' =>
-                    now(),
-            ]);
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Urutan liveness tidak valid.',
+                ], 422);
+            }
 
 
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Urutan liveness tidak sesuai dengan challenge.',
-            ], 422);
+            if (
+                $submittedChallenge !==
+                $sessionChallenge
+            ) {
+
+                FaceVerification::create([
+                    'user_id' =>
+                        $user->id,
+
+                    'face_profile_id' =>
+                        $user->faceProfile->id,
+
+                    'verification_type' =>
+                        $verificationType,
+
+                    'liveness_passed' =>
+                        false,
+
+                    'face_matched' =>
+                        false,
+
+                    'distance' =>
+                        null,
+
+                    'status' =>
+                        'failed',
+
+                    'verified_at' =>
+                        now(),
+                ]);
+
+
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Urutan liveness tidak sesuai dengan challenge.',
+                ], 422);
+            }
+
         }
 
 
@@ -480,7 +572,7 @@ class FaceVerificationController extends Controller
         */
 
         $threshold =
-            0.60;
+            0.50;
 
 
         /*

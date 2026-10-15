@@ -1,4 +1,3 @@
-```php
 <!DOCTYPE html>
 <html lang="id">
 
@@ -57,8 +56,15 @@
                     autoplay
                     muted
                     playsinline
-                    class="w-full aspect-video object-cover"
+                    class="w-full h-auto"
+                    style="transform: scaleX(-1);"
                 ></video>
+
+                <canvas
+                    id="overlay"
+                    class="absolute inset-0 w-full h-full pointer-events-none"
+                    style="transform: scaleX(-1);"
+                ></canvas>
 
                 <div
                     id="cameraStatus"
@@ -158,6 +164,12 @@
 
 
             <div
+                id="spoofAlert"
+                class="hidden mt-6 p-4 rounded-xl bg-red-950 border border-red-500 text-red-200 text-center font-semibold"
+            ></div>
+
+
+            <div
                 id="message"
                 class="mt-4 text-center text-sm"
             ></div>
@@ -210,12 +222,33 @@ const message =
 
 /*
 |--------------------------------------------------------------------------
+| OVERLAY
+|--------------------------------------------------------------------------
+*/
+
+const overlay =
+    document.getElementById("overlay");
+
+const overlayCtx =
+    overlay.getContext("2d");
+
+let lastFaceBox = null;
+
+let lastFaceAt = 0;
+
+
+/*
+|--------------------------------------------------------------------------
 | SERVER CHALLENGE
 |--------------------------------------------------------------------------
 */
 
 const livenessChallenge =
     @json(session('face_liveness_challenge', []));
+
+
+const verificationType =
+    @json(session('face_liveness_type', 'login'));
 
 
 /*
@@ -269,13 +302,166 @@ const CALIBRATION_SAMPLES = 12;
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| MAIN FACE
+|--------------------------------------------------------------------------
+|
+| Hanya terima satu wajah, berada di dalam kotak tengah,
+| dan tidak terpotong tepi frame. Mencegah wajah orang lain
+| di belakang user ikut dicocokkan.
+|
+*/
+
+let lastFaceStatus = "none";
+
+
+function getGuideRect()
+{
+    const w = overlay.width * 0.5;
+
+    const h = overlay.height * 0.7;
+
+    return {
+        x: (overlay.width - w) / 2,
+        y: (overlay.height - h) / 2,
+        w: w,
+        h: h
+    };
+}
+
+
+function faceStatusMessage()
+{
+    if (lastFaceStatus === "multiple") {
+
+        return "⚠️ Terdeteksi lebih dari satu wajah. Pastikan hanya Anda di depan kamera.";
+
+    }
+
+    if (lastFaceStatus === "outside") {
+
+        return "⚠️ Posisikan wajah di dalam kotak putus-putus dan pastikan wajah tidak terpotong.";
+
+    }
+
+    return "❌ Wajah tidak terdeteksi. Posisikan wajah di depan kamera.";
+}
+
+
+let lastDetections = [];
+
+
+async function detectMainFace(withDescriptor = false)
+{
+    let query =
+        faceapi
+            .detectAllFaces(
+                video,
+                detectorOptions()
+            )
+            .withFaceLandmarks();
+
+    if (withDescriptor) {
+
+        query = query.withFaceDescriptors();
+
+    }
+
+    const results = await query;
+
+    lastDetections =
+        results.map(result => ({
+            box: result.detection.box,
+            ok: false
+        }));
+
+    if (results.length === 0) {
+
+        lastFaceStatus = "none";
+
+        return null;
+
+    }
+
+    if (results.length > 1) {
+
+        lastFaceStatus = "multiple";
+
+        return null;
+
+    }
+
+    const box = results[0].detection.box;
+
+    const guide = getGuideRect();
+
+    const centerX = box.x + box.width / 2;
+
+    const centerY = box.y + box.height / 2;
+
+    /*
+    | Wajah harus cukup besar (dekat kamera), berada di kotak tengah
+    | seluruhnya, dan tidak menyentuh tepi frame.
+    */
+    const bigEnough =
+        box.height >= overlay.height * 0.2;
+
+    const insideGuide =
+        centerX > guide.x &&
+        centerX < guide.x + guide.w &&
+        box.y > guide.y - box.height * 0.1 &&
+        box.y + box.height < guide.y + guide.h + box.height * 0.1;
+
+    const touchesEdge =
+        box.x < 2 ||
+        box.y < 2 ||
+        box.x + box.width > overlay.width - 2 ||
+        box.y + box.height > overlay.height - 2;
+
+    if (!bigEnough || !insideGuide || touchesEdge) {
+
+        lastFaceStatus = "outside";
+
+        return null;
+
+    }
+
+    lastDetections[0].ok = true;
+
+    lastFaceStatus = "ok";
+
+    return results[0];
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| DETECTOR OPTIONS
+|--------------------------------------------------------------------------
+|
+| SSD MobileNet v1 lebih akurat dibanding TinyFaceDetector,
+| terutama untuk wajah yang menoleh atau jarak jauh.
+|
+*/
+
+function detectorOptions()
+{
+    return new faceapi.SsdMobilenetv1Options({
+
+        minConfidence: 0.7
+
+    });
+}
+
+
 async function loadModels()
 {
     cameraStatus.innerText =
         "Memuat model face detection...";
 
 
-    await faceapi.nets.tinyFaceDetector.loadFromUri(
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(
         "/models"
     );
 
@@ -781,6 +967,70 @@ async function moveToNextChallenge()
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| AVERAGE DESCRIPTOR
+|--------------------------------------------------------------------------
+|
+| Ambil beberapa frame lalu dirata-ratakan agar lebih stabil
+| dibanding satu frame saja.
+|
+*/
+
+async function captureAverageDescriptor(samples = 5)
+{
+    const descriptors = [];
+
+    for (
+        let attempt = 0;
+        attempt < samples * 3 &&
+        descriptors.length < samples;
+        attempt++
+    ) {
+
+        const detection =
+            await detectMainFace(true);
+
+        lastFaceBox =
+            detection
+                ? detection.detection.box
+                : null;
+
+        lastFaceAt = Date.now();
+
+
+        if (
+            detection &&
+            detection.detection.box.width >= 120
+        ) {
+
+            descriptors.push(
+                detection.descriptor
+            );
+
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+    }
+
+    if (descriptors.length < samples) {
+
+        return null;
+
+    }
+
+    return Array.from(
+        descriptors[0],
+        (_, i) =>
+            descriptors.reduce(
+                (sum, d) => sum + d[i],
+                0
+            ) / descriptors.length
+    );
+}
+
+
 async function completeLiveness()
 {
     livenessPassed =
@@ -818,26 +1068,14 @@ async function completeLiveness()
 
     try {
 
-        const detection =
-            await faceapi
-                .detectSingleFace(
-                    video,
-                    new faceapi.TinyFaceDetectorOptions({
-
-                        inputSize: 320,
-
-                        scoreThreshold: 0.45
-
-                    })
-                )
-                .withFaceLandmarks()
-                .withFaceDescriptor();
+        const averagedDescriptor =
+            await captureAverageDescriptor(5);
 
 
-        if (!detection) {
+        if (!averagedDescriptor) {
 
             failLiveness(
-                "❌ Wajah tidak terdeteksi setelah liveness selesai."
+                "❌ Wajah tidak cukup jelas. Dekatkan wajah ke kamera lalu ulangi."
             );
 
             return;
@@ -846,9 +1084,7 @@ async function completeLiveness()
 
 
         savedDescriptor =
-            Array.from(
-                detection.descriptor
-            );
+            averagedDescriptor;
 
 
         livenessStatus.innerText =
@@ -1079,24 +1315,21 @@ async function detectLiveness()
     try {
 
         const detection =
-            await faceapi
-                .detectSingleFace(
-                    video,
-                    new faceapi.TinyFaceDetectorOptions({
+            await detectMainFace(false);
 
-                        inputSize: 320,
 
-                        scoreThreshold: 0.45
+        lastFaceBox =
+            detection
+                ? detection.detection.box
+                : null;
 
-                    })
-                )
-                .withFaceLandmarks();
+        lastFaceAt = Date.now();
 
 
         if (!detection) {
 
             livenessStatus.innerText =
-                "❌ Wajah tidak terdeteksi. Posisikan wajah di depan kamera.";
+                "" + faceStatusMessage() + "";
 
 
             isDetecting =
@@ -1233,6 +1466,14 @@ async function detectLiveness()
 
 function startLivenessDetection()
 {
+    if (verificationType === 'transaction') {
+
+        runPassiveVerification();
+
+        return;
+
+    }
+
     showCurrentChallenge();
 
 
@@ -1476,9 +1717,458 @@ verifyButton.addEventListener(
 
 /*
 |--------------------------------------------------------------------------
+| PASSIVE VERIFICATION (TRANSAKSI)
+|--------------------------------------------------------------------------
+|
+| Tanpa challenge. User cukup menatap kamera.
+| Sistem memantau kedipan alami dan gerakan halus wajah.
+| Foto statis tidak berkedip dan hampir tidak bergerak.
+|
+*/
+
+const PASSIVE_WINDOW = 15000;
+
+const PASSIVE_MOTION_MIN = 0.006;
+
+const PASSIVE_MIN_DESCRIPTORS = 5;
+
+
+function showSpoofAlert(text)
+{
+    const alertBox =
+        document.getElementById("spoofAlert");
+
+    alertBox.innerText = text;
+
+    alertBox.classList.remove("hidden");
+}
+
+
+function hideSpoofAlert()
+{
+    const alertBox =
+        document.getElementById("spoofAlert");
+
+    alertBox.innerText = "";
+
+    alertBox.classList.add("hidden");
+}
+
+
+function stdDev(values)
+{
+    const mean =
+        values.reduce((a, b) => a + b, 0) /
+        values.length;
+
+    const variance =
+        values.reduce(
+            (sum, v) => sum + (v - mean) * (v - mean),
+            0
+        ) /
+        values.length;
+
+    return Math.sqrt(variance);
+}
+
+
+/*
+| Gerakan wajah dinormalisasi terhadap lebar wajah,
+| sehingga tidak bergantung pada jarak ke kamera.
+*/
+function measureMotion(xs, ys, widths)
+{
+    if (xs.length < 2) {
+
+        return 0;
+
+    }
+
+    const avgWidth =
+        widths.reduce((a, b) => a + b, 0) /
+        widths.length;
+
+    return Math.max(
+        stdDev(xs),
+        stdDev(ys)
+    ) / avgWidth;
+}
+
+
+function averageDescriptors(list)
+{
+    return Array.from(
+        list[0],
+        (_, i) =>
+            list.reduce(
+                (sum, d) => sum + d[i],
+                0
+            ) / list.length
+    );
+}
+
+
+async function submitPassiveVerification(payload)
+{
+    const csrfToken =
+        document
+            .querySelector(
+                'meta[name="csrf-token"]'
+            )
+            ?.getAttribute("content");
+
+    const response =
+        await fetch(
+            "{{ route('face.verification.verify') }}",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+
+                credentials: "same-origin",
+
+                body: JSON.stringify(payload)
+            }
+        );
+
+    return {
+        ok: response.ok,
+        data: await response.json()
+    };
+}
+
+
+function failPassive(text)
+{
+    progressBar.style.width = "0%";
+
+    livenessStatus.innerText = text;
+
+    livenessStatus.className =
+        "mt-4 text-center text-sm text-red-400 font-semibold";
+
+    retryButton.classList.remove("hidden");
+}
+
+
+async function runPassiveVerification()
+{
+    clearInterval(detectionInterval);
+
+    hideSpoofAlert();
+
+    retryButton.classList.add("hidden");
+
+    verifyButton.classList.add("hidden");
+
+    message.innerText = "";
+
+    challengeTitle.innerText =
+        "VERIFIKASI OTOMATIS";
+
+    challengeCounter.innerText =
+        "-";
+
+    instruction.innerText =
+        "Tatap kamera dengan wajar. Verifikasi berjalan otomatis.";
+
+    resetBlink();
+
+
+    const startedAt = Date.now();
+
+    const noseXs = [];
+    const noseYs = [];
+    const widths = [];
+    const descriptors = [];
+
+    let blinkSeen = false;
+
+
+    while (Date.now() - startedAt < PASSIVE_WINDOW) {
+
+        const detection =
+            await detectMainFace(true);
+
+        lastFaceBox =
+            detection
+                ? detection.detection.box
+                : null;
+
+        lastFaceAt = Date.now();
+
+        const elapsed =
+            Date.now() - startedAt;
+
+        progressBar.style.width =
+            `${Math.min(100, (elapsed / PASSIVE_WINDOW) * 100)}%`;
+
+        if (!detection) {
+
+            livenessStatus.innerText =
+                "" + faceStatusMessage() + "";
+
+            continue;
+
+        }
+
+        if (detectBlink(detection.landmarks)) {
+
+            blinkSeen = true;
+
+        }
+
+        const nose =
+            detection.landmarks.getNose()[3];
+
+        noseXs.push(nose.x);
+        noseYs.push(nose.y);
+        widths.push(detection.detection.box.width);
+
+        if (detection.detection.box.width >= 120) {
+
+            descriptors.push(detection.descriptor);
+
+        }
+
+        livenessStatus.innerText =
+            "Memverifikasi wajah...";
+
+        livenessStatus.className =
+            "mt-4 text-center text-sm text-slate-300";
+
+    }
+
+
+    if (!descriptors.length) {
+
+        failPassive(
+            "❌ Wajah tidak terdeteksi cukup jelas. Ulangi verifikasi."
+        );
+
+        return;
+
+    }
+
+
+    const motion =
+        measureMotion(noseXs, noseYs, widths);
+
+    const embedding =
+        averageDescriptors(descriptors);
+
+
+    /*
+    | Tidak ada kedipan dan wajah hampir diam = kemungkinan foto/layar.
+    */
+    if (
+        !blinkSeen &&
+        motion < PASSIVE_MOTION_MIN
+    ) {
+
+        try {
+
+            await submitPassiveVerification({
+                face_embedding: embedding,
+                liveness_passed: false,
+                liveness_mode: "passive",
+                spoof_suspected: true
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+        progressBar.style.width = "0%";
+
+        livenessStatus.innerText =
+            "⚠️ Verifikasi dihentikan.";
+
+        showSpoofAlert(
+            "⚠️ Terdeteksi kemungkinan foto atau layar. Transaksi diblokir dan kejadian ini dicatat."
+        );
+
+        retryButton.classList.remove("hidden");
+
+        return;
+
+    }
+
+
+    if (descriptors.length < PASSIVE_MIN_DESCRIPTORS) {
+
+        failPassive(
+            "❌ Wajah kurang jelas. Dekatkan wajah ke kamera lalu ulangi."
+        );
+
+        return;
+
+    }
+
+
+    livenessStatus.innerText =
+        "Mencocokkan wajah...";
+
+    try {
+
+        const { ok, data } =
+            await submitPassiveVerification({
+                face_embedding: embedding,
+                liveness_passed: true,
+                liveness_mode: "passive"
+            });
+
+        if (!ok || !data.success) {
+
+            throw new Error(
+                data.message ||
+                "Verifikasi wajah gagal."
+            );
+
+        }
+
+        message.innerText =
+            data.message ||
+            "Verifikasi wajah berhasil.";
+
+        message.className =
+            "mt-4 text-center text-sm text-emerald-400 font-semibold";
+
+        setTimeout(() => {
+
+            window.location.href =
+                data.redirect;
+
+        }, 1000);
+
+    } catch (error) {
+
+        console.error(error);
+
+        failPassive(error.message);
+
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | INITIALIZE
 |--------------------------------------------------------------------------
 */
+
+/*
+|--------------------------------------------------------------------------
+| DRAW OVERLAY
+|--------------------------------------------------------------------------
+|
+| Kotak putus-putus di tengah = area posisi wajah.
+| Kotak hijau = posisi wajah yang terdeteksi.
+|
+*/
+
+function syncOverlaySize()
+{
+    overlay.width =
+        video.videoWidth || 640;
+
+    overlay.height =
+        video.videoHeight || 480;
+}
+
+
+function drawOverlay()
+{
+    overlayCtx.clearRect(
+        0,
+        0,
+        overlay.width,
+        overlay.height
+    );
+
+
+    const guideW =
+        overlay.width * 0.5;
+
+    const guideH =
+        overlay.height * 0.7;
+
+    const guideX =
+        (overlay.width - guideW) / 2;
+
+    const guideY =
+        (overlay.height - guideH) / 2;
+
+
+    overlayCtx.setLineDash([12, 8]);
+
+    overlayCtx.lineWidth = 3;
+
+    overlayCtx.strokeStyle =
+        "rgba(255, 255, 255, 0.7)";
+
+    overlayCtx.strokeRect(
+        guideX,
+        guideY,
+        guideW,
+        guideH
+    );
+
+    overlayCtx.setLineDash([]);
+
+
+    if (
+        lastFaceBox &&
+        Date.now() - lastFaceAt < 400
+    ) {
+
+        overlayCtx.lineWidth = 4;
+
+        overlayCtx.strokeStyle =
+            "#10b981";
+
+        overlayCtx.strokeRect(
+            lastFaceBox.x,
+            lastFaceBox.y,
+            lastFaceBox.width,
+            lastFaceBox.height
+        );
+
+    }
+
+
+    if (Date.now() - lastFaceAt < 400) {
+
+        overlayCtx.lineWidth = 3;
+
+        lastDetections.forEach(d => {
+
+            overlayCtx.strokeStyle =
+                d.ok
+                    ? "#10b981"
+                    : "#facc15";
+
+            overlayCtx.strokeRect(
+                d.box.x,
+                d.box.y,
+                d.box.width,
+                d.box.height
+            );
+
+        });
+
+    }
+
+
+    requestAnimationFrame(drawOverlay);
+}
+
 
 async function initialize()
 {
@@ -1521,6 +2211,11 @@ async function initialize()
         });
 
 
+        syncOverlaySize();
+
+        drawOverlay();
+
+
         livenessStatus.innerText =
             "Kamera siap. Ikuti challenge.";
 
@@ -1553,4 +2248,3 @@ initialize();
 </body>
 
 </html>
-```
